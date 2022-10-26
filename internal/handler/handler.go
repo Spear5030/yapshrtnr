@@ -49,6 +49,7 @@ func shortingURL(longURL string) (string, error) {
 		fmt.Println(err)
 		return "", errURLshorting
 	}
+	// на stackoverflow есть варианты быстрее, но этот более читабелен. первые два символа - визуальная привязка к домену
 	const symBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	host := strings.Split(u.Hostname(), ".")
 	b := make([]byte, 8)
