@@ -26,7 +26,7 @@ func HandleURL(w http.ResponseWriter, r *http.Request) {
 		}
 		Urls[short] = string(b)
 		w.WriteHeader(201)
-		w.Write([]byte(short))
+		w.Write([]byte("http://localhost:8080/" + short))
 	case http.MethodGet:
 		short := strings.TrimLeft(r.URL.Path, "/")
 		if v, ok := Urls[short]; ok {
