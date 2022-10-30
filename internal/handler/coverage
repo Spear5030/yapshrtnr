@@ -1,0 +1,15 @@
+mode: set
+internal/handler/handler.go:22.36,24.2 1 0
+internal/handler/handler.go:28.69,29.18 1 1
+internal/handler/handler.go:30.23,32.17 2 0
+internal/handler/handler.go:36.3,37.17 2 0
+internal/handler/handler.go:40.3,43.52 3 0
+internal/handler/handler.go:44.22,50.51 6 1
+internal/handler/handler.go:51.10,52.55 1 1
+internal/handler/handler.go:32.17,35.4 2 0
+internal/handler/handler.go:37.17,39.4 1 0
+internal/handler/handler.go:59.50,61.38 2 0
+internal/handler/handler.go:66.2,71.30 6 0
+internal/handler/handler.go:74.2,74.23 1 0
+internal/handler/handler.go:61.38,64.3 2 0
+internal/handler/handler.go:71.30,73.3 1 0
