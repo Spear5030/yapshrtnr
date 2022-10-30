@@ -10,9 +10,22 @@ import (
 	"strings"
 )
 
-var Urls = make(map[string]string)
+type Handler struct {
+	storage storage
+}
 
-func HandleURL(w http.ResponseWriter, r *http.Request) {
+type storage interface {
+	SetURL(short, long string)
+	GetURL(short string) string
+}
+
+func New(storage storage) *Handler {
+	return &Handler{storage: storage}
+}
+
+//var Urls = make(map[string]string)
+
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		b, err := io.ReadAll(r.Body)
@@ -24,16 +37,16 @@ func HandleURL(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
-		Urls[short] = string(b)
+		h.storage.SetURL(short, string(b))
+
 		w.WriteHeader(201)
 		w.Write([]byte("http://localhost:8080/" + short))
 	case http.MethodGet:
 		short := strings.TrimLeft(r.URL.Path, "/")
-		if v, ok := Urls[short]; ok {
-			w.Header().Set("Location", v)
-			w.WriteHeader(307)
-			return
-		}
+		v := h.storage.GetURL(short)
+		w.Header().Set("Location", v)
+		w.WriteHeader(307)
+		return
 		http.Error(w, "Wrong ID", http.StatusBadRequest)
 	default:
 		http.Error(w, "Wrong Method", http.StatusBadRequest)
