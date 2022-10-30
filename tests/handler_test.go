@@ -1,6 +1,7 @@
-package handler
+package tests
 
 import (
+	"internal/handler"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -40,7 +41,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			request := httptest.NewRequest(tt.method, tt.request, nil)
 			w := httptest.NewRecorder()
-			h := Handler{testStorage.NewStorage()}
+			h := handler.Handler{testStorage.NewStorage()}
 			h.ServeHTTP(w, request)
 			result := w.Result()
 

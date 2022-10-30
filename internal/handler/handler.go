@@ -11,7 +11,7 @@ import (
 )
 
 type Handler struct {
-	storage storage
+	Storage storage
 }
 
 type storage interface {
@@ -20,7 +20,7 @@ type storage interface {
 }
 
 func New(storage storage) *Handler {
-	return &Handler{storage: storage}
+	return &Handler{Storage: storage}
 }
 
 //var Urls = make(map[string]string)
@@ -37,13 +37,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
-		h.storage.SetURL(short, string(b))
+		h.Storage.SetURL(short, string(b))
 
 		w.WriteHeader(201)
 		w.Write([]byte("http://localhost:8080/" + short))
 	case http.MethodGet:
 		short := strings.TrimLeft(r.URL.Path, "/")
-		v := h.storage.GetURL(short)
+		v := h.Storage.GetURL(short)
 		w.Header().Set("Location", v)
 		w.WriteHeader(307)
 		return
