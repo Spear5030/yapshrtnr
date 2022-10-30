@@ -27,22 +27,17 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 			request: "/gcfCxYsh",
 		},
-		{
-			name:   "simple test #2 get method",
-			method: http.MethodGet,
-			want: want{
-				statusCode: 307,
-			},
-			request: "/",
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			request := httptest.NewRequest(tt.method, tt.request, nil)
 			w := httptest.NewRecorder()
 			h := Handler{testStorage.NewStorage()}
+
 			h.ServeHTTP(w, request)
 			result := w.Result()
+			defer result.Body.Close()
+			//resBody, err := io.ReadAll(result.Body)
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 		})
 	}
