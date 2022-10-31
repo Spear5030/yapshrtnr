@@ -34,13 +34,14 @@ func TestRouter(t *testing.T) {
 	defer ts.Close()
 	h.Storage.SetURL("tt123456", "http://ya.ru")
 
-	statusCode, body := testRequest(t, ts, "GET", "/tt123456", "")
-	assert.Equal(t, http.StatusOK, statusCode)
-
-	statusCode, body = testRequest(t, ts, "GET", "/", "")
-	assert.Equal(t, http.StatusMethodNotAllowed, statusCode)
-
-	statusCode, body = testRequest(t, ts, "POST", "/", "http://longlonglong.lg")
+	statusCode, body := testRequest(t, ts, "POST", "/", "http://longlonglong.lg")
 	assert.Equal(t, http.StatusCreated, statusCode)
 	assert.NotEmpty(t, body)
+
+	statusCode, _ = testRequest(t, ts, "GET", "/tt123456", "")
+	assert.Equal(t, http.StatusOK, statusCode)
+
+	statusCode, _ = testRequest(t, ts, "GET", "/", "")
+	assert.Equal(t, http.StatusMethodNotAllowed, statusCode)
+
 }

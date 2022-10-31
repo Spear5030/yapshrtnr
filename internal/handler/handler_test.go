@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/require"
 	"testing"
 
@@ -36,7 +35,6 @@ func Test_shortingURL(t *testing.T) {
 			got, err := shortingURL(tt.args.longURL)
 			if !tt.wantErr {
 				require.NoError(t, err)
-				fmt.Sprintf("shortingURL(%v)", tt.args.longURL)
 			}
 			assert.Regexp(t, tt.wantRegexp, got)
 		})
