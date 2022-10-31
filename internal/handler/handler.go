@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"math/rand"
 	"net/http"
@@ -23,37 +22,31 @@ func New(storage storage) *Handler {
 	return &Handler{Storage: storage}
 }
 
-//var Urls = make(map[string]string)
-
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		b, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		short, err := shortingURL(string(b))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		}
-		h.Storage.SetURL(short, string(b))
-
-		w.WriteHeader(201)
-		w.Write([]byte("http://localhost:8080/" + short))
-	case http.MethodGet:
-		short := strings.TrimLeft(r.URL.Path, "/")
-		v := h.Storage.GetURL(short)
-		if len(v) > 0 {
-			w.Header().Set("Location", v)
-			w.WriteHeader(307)
-			return
-		}
-		http.Error(w, "Wrong ID", http.StatusBadRequest)
-	default:
-		http.Error(w, "Wrong Method", http.StatusBadRequest)
+func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
+	short, err := shortingURL(string(b))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	h.Storage.SetURL(short, string(b))
 
+	w.WriteHeader(201)
+	w.Write([]byte("http://localhost:8080/" + short))
+}
+
+func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
+	short := strings.TrimLeft(r.URL.Path, "/")
+	v := h.Storage.GetURL(short)
+	if len(v) > 0 {
+		w.Header().Set("Location", v)
+		w.WriteHeader(307)
+		return
+	}
+	http.Error(w, "Wrong ID", http.StatusBadRequest)
 }
 
 var errURLshorting = errors.New("handler: wrong URL")
@@ -61,7 +54,7 @@ var errURLshorting = errors.New("handler: wrong URL")
 func shortingURL(longURL string) (string, error) {
 	u, err := url.Parse(longURL)
 	if err != nil || u.Hostname() == "" {
-		fmt.Println(err)
+		//fmt.Println(err)
 		return "", errURLshorting
 	}
 	// на stackoverflow есть варианты быстрее, но этот более читабелен. первые два символа - визуальная привязка к домену
