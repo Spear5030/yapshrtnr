@@ -18,15 +18,15 @@ func Test_shortingURL(t *testing.T) {
 		wantErr    bool
 	}{
 		{
-			name:       "noURL",
+			name:       "no URL",
 			args:       args{longURL: "longlonglonglogn.lg/"},
 			wantRegexp: "",
 			wantErr:    true,
 		},
 		{
-			name:       "normal URL",
-			args:       args{longURL: "http://longlonglonglogn.lg/"},
-			wantRegexp: "\\w{8}",
+			name:       "normal URL - RegExp 8sym",
+			args:       args{longURL: "http://longlonglonglogn.com/"},
+			wantRegexp: "^\\w{8}$",
 			wantErr:    false,
 		},
 	}

@@ -54,7 +54,6 @@ var errURLshorting = errors.New("handler: wrong URL")
 func shortingURL(longURL string) (string, error) {
 	u, err := url.Parse(longURL)
 	if err != nil || u.Hostname() == "" {
-		//fmt.Println(err)
 		return "", errURLshorting
 	}
 	// на stackoverflow есть варианты быстрее, но этот более читабелен. первые два символа - визуальная привязка к домену
