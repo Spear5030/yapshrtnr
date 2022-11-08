@@ -1,6 +1,8 @@
 package app
 
 import (
+	"fmt"
+	"github.com/Spear5030/yapshrtnr/internal/config"
 	"github.com/Spear5030/yapshrtnr/internal/handler"
 	"github.com/Spear5030/yapshrtnr/internal/router"
 	"github.com/Spear5030/yapshrtnr/internal/storage"
@@ -13,13 +15,13 @@ type App struct {
 	HTTPServer *http.Server
 }
 
-func New() (*App, error) {
+func New(cfg config.Config) (*App, error) {
 
-	s := storage.NewStorage()
-	h := handler.New(s)
+	s := storage.New()
+	h := handler.New(s, cfg)
 	r := router.New(h)
 	srv := &http.Server{
-		Addr:    "localhost:8080",
+		Addr:    fmt.Sprintf(":%d", cfg.AppPort),
 		Handler: r,
 	}
 	return &App{

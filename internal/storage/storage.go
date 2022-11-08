@@ -5,21 +5,21 @@ package storage
 	GetURL(short string) string
 }*/
 
-type Storage struct {
+type storage struct {
 	URLs map[string]string
 }
 
-func NewStorage() *Storage {
-	return &Storage{
+func New() *storage {
+	return &storage{
 		make(map[string]string),
 	}
 }
 
-func (mStorage *Storage) SetURL(short, long string) {
+func (mStorage *storage) SetURL(short, long string) {
 	mStorage.URLs[short] = long
 }
 
-func (mStorage *Storage) GetURL(short string) string {
+func (mStorage *storage) GetURL(short string) string {
 	if v, ok := mStorage.URLs[short]; ok {
 		return v
 	}

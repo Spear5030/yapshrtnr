@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/Spear5030/yapshrtnr/internal/config"
 	"github.com/Spear5030/yapshrtnr/internal/handler"
 	testStorage "github.com/Spear5030/yapshrtnr/internal/storage"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,8 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path, body string) (
 }
 
 func TestRouter(t *testing.T) {
-	h := handler.New(testStorage.NewStorage())
+	cfg, _ := config.New()
+	h := handler.New(testStorage.New(), cfg)
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()

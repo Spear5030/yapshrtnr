@@ -2,11 +2,16 @@ package main
 
 import (
 	"github.com/Spear5030/yapshrtnr/internal/app"
+	"github.com/Spear5030/yapshrtnr/internal/config"
 	"log"
 )
 
 func main() {
-	a, err := app.New()
+	cfg, err := config.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+	a, err := app.New(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}

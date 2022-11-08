@@ -2,6 +2,8 @@ package handler
 
 import (
 	"errors"
+	"fmt"
+	"github.com/Spear5030/yapshrtnr/internal/config"
 	"io"
 	"math/rand"
 	"net/http"
@@ -11,6 +13,7 @@ import (
 
 type Handler struct {
 	Storage storage
+	Config  config.Config
 }
 
 type storage interface {
@@ -18,8 +21,11 @@ type storage interface {
 	GetURL(short string) string
 }
 
-func New(storage storage) *Handler {
-	return &Handler{Storage: storage}
+func New(storage storage, config config.Config) *Handler {
+	return &Handler{
+		Storage: storage,
+		Config:  config,
+	}
 }
 
 func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +41,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 	h.Storage.SetURL(short, string(b))
 
 	w.WriteHeader(201)
-	w.Write([]byte("http://localhost:8080/" + short))
+	w.Write([]byte(fmt.Sprintf("http://%s:%d/%s", h.Config.Host, h.Config.AppPort, short)))
 }
 
 func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
