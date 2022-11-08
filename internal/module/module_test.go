@@ -1,4 +1,4 @@
-package handler
+package module
 
 import (
 	"github.com/stretchr/testify/require"
@@ -32,7 +32,7 @@ func Test_shortingURL(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := shortingURL(tt.args.longURL)
+			got, err := ShortingURL(tt.args.longURL)
 			if !tt.wantErr {
 				require.NoError(t, err)
 			}

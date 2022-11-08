@@ -1,13 +1,11 @@
 package handler
 
 import (
-	"errors"
 	"fmt"
 	"github.com/Spear5030/yapshrtnr/internal/config"
+	"github.com/Spear5030/yapshrtnr/internal/module"
 	"io"
-	"math/rand"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -34,7 +32,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	short, err := shortingURL(string(b))
+	short, err := module.ShortingURL(string(b))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
@@ -53,23 +51,4 @@ func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Error(w, "Wrong ID", http.StatusBadRequest)
-}
-
-var errURLshorting = errors.New("handler: wrong URL")
-
-func shortingURL(longURL string) (string, error) {
-	u, err := url.Parse(longURL)
-	if err != nil || u.Hostname() == "" {
-		return "", errURLshorting
-	}
-	// на stackoverflow есть варианты быстрее, но этот более читабелен. первые два символа - визуальная привязка к домену
-	const symBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	host := strings.Split(u.Hostname(), ".")
-	b := make([]byte, 8)
-	b[0] = host[0][0]
-	b[1] = host[len(host)-1][0]
-	for i := 2; i < len(b); i++ {
-		b[i] = symBytes[rand.Intn(len(symBytes))]
-	}
-	return string(b), nil
 }
