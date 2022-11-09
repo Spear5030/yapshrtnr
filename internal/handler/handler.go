@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"github.com/Spear5030/yapshrtnr/internal/config"
 	"github.com/Spear5030/yapshrtnr/internal/module"
 	"io"
 	"net/http"
@@ -11,7 +10,7 @@ import (
 
 type Handler struct {
 	Storage storage
-	Config  config.Config
+	Addr    string
 }
 
 type storage interface {
@@ -19,10 +18,10 @@ type storage interface {
 	GetURL(short string) string
 }
 
-func New(storage storage, config config.Config) *Handler {
+func New(storage storage, addr string) *Handler {
 	return &Handler{
 		Storage: storage,
-		Config:  config,
+		Addr:    addr,
 	}
 }
 
@@ -39,7 +38,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 	h.Storage.SetURL(short, string(b))
 
 	w.WriteHeader(201)
-	w.Write([]byte(fmt.Sprintf("http://%s:%d/%s", h.Config.Host, h.Config.AppPort, short)))
+	w.Write([]byte(fmt.Sprintf("http://%s/%s", h.Addr, short)))
 }
 
 func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {

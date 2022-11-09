@@ -18,7 +18,7 @@ type App struct {
 func New(cfg config.Config) (*App, error) {
 
 	s := storage.New()
-	h := handler.New(s, cfg)
+	h := handler.New(s, fmt.Sprintf("%s:%d", cfg.Host, cfg.AppPort))
 	r := router.New(h)
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.AppPort),
