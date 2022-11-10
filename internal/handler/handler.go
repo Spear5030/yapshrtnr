@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Spear5030/yapshrtnr/internal/module"
 	"io"
@@ -16,6 +17,14 @@ type Handler struct {
 type storage interface {
 	SetURL(short, long string)
 	GetURL(short string) string
+}
+
+type input struct {
+	URL string `json:"url"`
+}
+
+type result struct {
+	ShortenURL string `json:"shorten_url"`
 }
 
 func New(storage storage, addr string) *Handler {
@@ -50,4 +59,31 @@ func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Error(w, "Wrong ID", http.StatusBadRequest)
+}
+
+func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	url := input{}
+	if err := json.Unmarshal(b, &url); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	short, err := module.ShortingURL(url.URL)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	h.Storage.SetURL(short, url.URL)
+
+	w.WriteHeader(201)
+	res := result{}
+	res.ShortenURL = fmt.Sprintf("http://%s/%s", h.Addr, short)
+	resJSON, err := json.Marshal(res)
+	
+	w.Write(resJSON)
 }
