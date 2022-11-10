@@ -84,6 +84,8 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 	res := result{}
 	res.ShortenURL = fmt.Sprintf("http://%s/%s", h.Addr, short)
 	resJSON, err := json.Marshal(res)
-	
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
 	w.Write(resJSON)
 }
