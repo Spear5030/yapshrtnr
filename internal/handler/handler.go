@@ -24,7 +24,7 @@ type input struct {
 }
 
 type result struct {
-	ShortenURL string `json:"shorten_url"`
+	Result string `json:"result"`
 }
 
 func New(storage storage, addr string) *Handler {
@@ -82,7 +82,7 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(201)
 	res := result{}
-	res.ShortenURL = fmt.Sprintf("http://%s/%s", h.Addr, short)
+	res.Result = fmt.Sprintf("http://%s/%s", h.Addr, short)
 	resJSON, err := json.Marshal(res)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
