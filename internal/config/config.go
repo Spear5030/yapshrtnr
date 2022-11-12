@@ -3,8 +3,8 @@ package config
 import "github.com/caarlos0/env"
 
 type Config struct {
-	AppPort int    `env:"APP_PORT" envDefault:"8080"`
-	Host    string `env:"APP_HOST" envDefault:"localhost"`
+	Addr    string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
+	BaseURL string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 }
 
 func New() (Config, error) {

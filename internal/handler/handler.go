@@ -11,7 +11,7 @@ import (
 
 type Handler struct {
 	Storage storage
-	Addr    string
+	BaseURL string
 }
 
 type storage interface {
@@ -27,10 +27,10 @@ type result struct {
 	Result string `json:"result"`
 }
 
-func New(storage storage, addr string) *Handler {
+func New(storage storage, baseURL string) *Handler {
 	return &Handler{
 		Storage: storage,
-		Addr:    addr,
+		BaseURL: baseURL,
 	}
 }
 
@@ -47,7 +47,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 	h.Storage.SetURL(short, string(b))
 
 	w.WriteHeader(201)
-	w.Write([]byte(fmt.Sprintf("http://%s/%s", h.Addr, short)))
+	w.Write([]byte(fmt.Sprintf("%s/%s", h.BaseURL, short)))
 }
 
 func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +82,7 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(201)
 	res := result{}
-	res.Result = fmt.Sprintf("http://%s/%s", h.Addr, short)
+	res.Result = fmt.Sprintf("%s/%s", h.BaseURL, short)
 	resJSON, err := json.Marshal(res)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
