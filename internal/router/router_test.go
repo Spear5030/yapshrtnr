@@ -29,7 +29,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path, body string) (
 }
 
 func TestRouter(t *testing.T) {
-	h := handler.New(testStorage.New(), "localhost:8080")
+	h := handler.New(testStorage.NewMemoryStorage(), "localhost:8080")
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -51,7 +51,7 @@ func TestRouter(t *testing.T) {
 }
 
 func TestJSON(t *testing.T) {
-	h := handler.New(testStorage.New(), "localhost:8080")
+	h := handler.New(testStorage.NewMemoryStorage(), "localhost:8080")
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()

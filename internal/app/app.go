@@ -15,8 +15,17 @@ type App struct {
 }
 
 func New(cfg config.Config) (*App, error) {
-
-	s := storage.New()
+	var s interface {
+		SetURL(short, long string)
+		GetURL(short string) string
+	}
+	if len(cfg.FileStorage) > 0 {
+		fileStorage := storage.NewFileStorage(cfg.FileStorage)
+		s = fileStorage
+	} else {
+		memoryStorage := storage.NewMemoryStorage()
+		s = memoryStorage
+	}
 	h := handler.New(s, cfg.BaseURL)
 	r := router.New(h)
 	srv := &http.Server{
