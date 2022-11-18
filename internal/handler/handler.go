@@ -36,15 +36,12 @@ func New(storage storage, baseURL string) *Handler {
 }
 
 func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r)
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Println(string(b))
 	short, err := module.ShortingURL(string(b))
-	fmt.Println(short)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
@@ -57,7 +54,6 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 	short := strings.TrimLeft(r.URL.Path, "/")
 	v := h.Storage.GetURL(short)
-	fmt.Println(h.Storage)
 	if len(v) > 0 {
 		w.Header().Set("Location", v)
 		w.WriteHeader(307)
@@ -72,17 +68,14 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Println(string(b))
 	url := input{}
 	if err := json.Unmarshal(b, &url); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	fmt.Println(url)
 	short, err := module.ShortingURL(url.URL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	fmt.Println(short)
 	h.Storage.SetURL(short, url.URL)
 
 	w.WriteHeader(201)
