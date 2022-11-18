@@ -54,12 +54,13 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 	short := strings.TrimLeft(r.URL.Path, "/")
 	v := h.Storage.GetURL(short)
+	fmt.Println(h.Storage)
 	if len(v) > 0 {
 		w.Header().Set("Location", v)
 		w.WriteHeader(307)
 		return
 	}
-	http.Error(w, "Wrong ID", http.StatusInternalServerError)
+	http.Error(w, "Wrong ID", http.StatusBadRequest)
 }
 
 func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
