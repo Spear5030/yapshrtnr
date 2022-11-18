@@ -41,7 +41,9 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	fmt.Println(string(b))
 	short, err := module.ShortingURL(string(b))
+	fmt.Println(short)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
@@ -69,17 +71,17 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
+	fmt.Println(string(b))
 	url := input{}
 	if err := json.Unmarshal(b, &url); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-
+	fmt.Println(url)
 	short, err := module.ShortingURL(url.URL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-
+	fmt.Println(short)
 	h.Storage.SetURL(short, url.URL)
 
 	w.WriteHeader(201)
