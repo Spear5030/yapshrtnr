@@ -11,7 +11,7 @@ func New(h *handler.Handler) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Compress(5))
-	//r.Use(handler.DecompressGZRequest)
+	r.Use(handler.DecompressGZRequest)
 	r.Get("/{id}", h.GetURL)
 	r.Post("/", h.PostURL)
 

@@ -104,6 +104,7 @@ func DecompressGZRequest(next http.Handler) http.Handler {
 				return
 			}
 			defer gz.Close()
+			r.Body = gz
 		}
 		next.ServeHTTP(w, r)
 	})
