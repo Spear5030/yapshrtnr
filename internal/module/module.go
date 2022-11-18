@@ -1,11 +1,10 @@
 package module
 
 import (
-	"errors"
 	"math/rand"
 )
 
-var errURLshorting = errors.New("handler: wrong URL")
+//var errURLshorting = errors.New("handler: wrong URL")
 
 func ShortingURL(longURL string) (string, error) {
 	b := make([]byte, 8)
