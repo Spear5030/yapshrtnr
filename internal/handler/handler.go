@@ -59,7 +59,7 @@ func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(307)
 		return
 	}
-	http.Error(w, "Wrong ID", http.StatusBadRequest)
+	http.Error(w, "Wrong ID", http.StatusInternalServerError)
 }
 
 func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
