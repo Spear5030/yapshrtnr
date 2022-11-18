@@ -36,6 +36,7 @@ func New(storage storage, baseURL string) *Handler {
 }
 
 func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r)
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
