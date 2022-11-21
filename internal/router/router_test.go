@@ -80,6 +80,7 @@ func TestGZRequest(t *testing.T) {
 	require.NoError(t, err)
 
 	respBody, err := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
 	require.NoError(t, err)
 	assert.Contains(t, string(respBody), cfg.BaseURL+"/yr")
 }
