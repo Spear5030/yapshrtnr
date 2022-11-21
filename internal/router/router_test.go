@@ -1,12 +1,16 @@
 package router
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/json"
+	"github.com/Spear5030/yapshrtnr/internal/config"
 	"github.com/Spear5030/yapshrtnr/internal/handler"
 	testStorage "github.com/Spear5030/yapshrtnr/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -29,7 +33,11 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path, body string) (
 }
 
 func TestRouter(t *testing.T) {
-	h := handler.New(testStorage.NewMemoryStorage(), "localhost:8080")
+	cfg, err := config.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL)
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -50,8 +58,38 @@ func TestRouter(t *testing.T) {
 	assert.NotEmpty(t, body)
 }
 
+func TestGZRequest(t *testing.T) {
+	cfg, err := config.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL)
+	r := New(h)
+	ts := httptest.NewServer(r)
+	defer ts.Close()
+	var buf bytes.Buffer
+	gzw := gzip.NewWriter(&buf)
+	_, _ = gzw.Write([]byte("https://ya.ru"))
+	_ = gzw.Close()
+	req, err := http.NewRequest("POST", ts.URL+"/", bytes.NewReader(buf.Bytes()))
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Content-Encoding", "gzip")
+	require.NoError(t, err)
+
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+
+	respBody, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	assert.Contains(t, string(respBody), cfg.BaseURL+"/yr")
+}
+
 func TestJSON(t *testing.T) {
-	h := handler.New(testStorage.NewMemoryStorage(), "localhost:8080")
+	cfg, err := config.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL)
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
