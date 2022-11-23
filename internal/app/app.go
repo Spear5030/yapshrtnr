@@ -5,6 +5,7 @@ import (
 	"github.com/Spear5030/yapshrtnr/internal/handler"
 	"github.com/Spear5030/yapshrtnr/internal/router"
 	"github.com/Spear5030/yapshrtnr/internal/storage"
+	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -20,7 +21,10 @@ func New(cfg config.Config) (*App, error) {
 		GetURL(short string) string
 	}
 	if len(cfg.FileStorage) > 0 {
-		fileStorage := storage.NewFileStorage(cfg.FileStorage)
+		fileStorage, err := storage.NewFileStorage(cfg.FileStorage)
+		if err != nil {
+			log.Fatal(err)
+		}
 		s = fileStorage
 	} else {
 		memoryStorage := storage.NewMemoryStorage()

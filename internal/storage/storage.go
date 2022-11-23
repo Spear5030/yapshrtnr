@@ -29,10 +29,10 @@ func NewMemoryStorage() *storage {
 	}
 }
 
-func NewFileStorage(filename string) *fileStorage {
+func NewFileStorage(filename string) (*fileStorage, error) {
 	file, err := os.OpenFile(filename, os.O_RDONLY|os.O_APPEND|os.O_CREATE, 0777)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer file.Close()
 	rd := bufio.NewReader(file)
@@ -58,7 +58,7 @@ func NewFileStorage(filename string) *fileStorage {
 	return &fileStorage{
 		filename: filename,
 		storage:  *storage,
-	}
+	}, nil
 }
 
 func (mStorage *storage) SetURL(short, long string) {

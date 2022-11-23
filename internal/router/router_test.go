@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -34,9 +33,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path, body string) (
 
 func TestRouter(t *testing.T) {
 	cfg, err := config.New()
-	if err != nil {
-		log.Fatal(err)
-	}
+	require.NoError(t, err)
 	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL)
 	r := New(h)
 	ts := httptest.NewServer(r)
@@ -60,9 +57,7 @@ func TestRouter(t *testing.T) {
 
 func TestGZRequest(t *testing.T) {
 	cfg, err := config.New()
-	if err != nil {
-		log.Fatal(err)
-	}
+	require.NoError(t, err)
 	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL)
 	r := New(h)
 	ts := httptest.NewServer(r)
@@ -87,9 +82,7 @@ func TestGZRequest(t *testing.T) {
 
 func TestJSON(t *testing.T) {
 	cfg, err := config.New()
-	if err != nil {
-		log.Fatal(err)
-	}
+	require.NoError(t, err)
 	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL)
 	r := New(h)
 	ts := httptest.NewServer(r)
