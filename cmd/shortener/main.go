@@ -11,6 +11,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	a, err := app.New(cfg)
 	if err != nil {
 		log.Fatal(err)
