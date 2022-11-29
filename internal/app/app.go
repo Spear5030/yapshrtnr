@@ -17,8 +17,9 @@ type App struct {
 
 func New(cfg config.Config) (*App, error) {
 	var s interface {
-		SetURL(short, long string)
+		SetURL(user, short, long string)
 		GetURL(short string) string
+		GetURLsByUser(user string) (urls map[string]string)
 	}
 	if len(cfg.FileStorage) > 0 {
 		fileStorage, err := storage.NewFileStorage(cfg.FileStorage)

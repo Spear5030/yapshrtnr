@@ -2,10 +2,14 @@ package handler
 
 import (
 	"compress/gzip"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/Spear5030/yapshrtnr/internal/module"
 	"io"
+	"math/rand"
 	"net/http"
 	"strings"
 )
@@ -16,8 +20,14 @@ type Handler struct {
 }
 
 type storage interface {
-	SetURL(short, long string)
+	SetURL(user, short, long string)
 	GetURL(short string) string
+	GetURLsByUser(user string) (urls map[string]string)
+}
+
+type link struct {
+	Short string `json:"short_url"`
+	Long  string `json:"original_url"`
 }
 
 type input struct {
@@ -45,7 +55,11 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	h.Storage.SetURL(short, string(b))
+	user, err := getUserIDFROMCookie(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	h.Storage.SetURL(user, short, string(b))
 
 	w.WriteHeader(201)
 	w.Write([]byte(fmt.Sprintf("%s/%s", h.BaseURL, short)))
@@ -76,12 +90,40 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	h.Storage.SetURL(short, url.URL)
+	user, err := getUserIDFROMCookie(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	h.Storage.SetURL(user, short, url.URL)
 
 	w.WriteHeader(201)
 	res := result{}
 	res.Result = fmt.Sprintf("%s/%s", h.BaseURL, short)
 	resJSON, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	w.Write(resJSON)
+}
+
+func (h *Handler) GetURLsByUser(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("id")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	urls := h.Storage.GetURLsByUser(cookie.Value)
+	if len(urls) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+	}
+	var one link
+	var links []link
+	for key, value := range urls {
+		one.Short = key
+		one.Long = value
+		links = append(links, one)
+	}
+	resJSON, err := json.Marshal(links)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
@@ -101,4 +143,66 @@ func DecompressGZRequest(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func CheckCookies(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookies := r.Cookies()
+		if verifyCookies(cookies) { // TODO rewrite
+
+		} else {
+			b := make([]byte, 16)
+			_, _ = rand.Read(b)
+			id := sha256.Sum256(b)
+			key := []byte("strongKey") // TODO move to config
+			h := hmac.New(sha256.New, key)
+			h.Write(id[:])
+			dst := h.Sum(nil)
+			cookie := &http.Cookie{
+				Name:  "id",
+				Value: fmt.Sprintf("%x", id),
+				Path:  "/",
+			}
+			http.SetCookie(w, cookie)
+			r.AddCookie(cookie)
+			cookie = &http.Cookie{
+				Name:  "token",
+				Value: fmt.Sprintf("%x", dst),
+				Path:  "/",
+			}
+			http.SetCookie(w, cookie)
+			r.AddCookie(cookie)
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func verifyCookies(cookies []*http.Cookie) bool {
+	key := []byte("strongKey") // TODO move to config
+	var id, token []byte
+	for _, cookie := range cookies {
+		switch cookie.Name {
+		case "id":
+			id, _ = hex.DecodeString(cookie.Value)
+		case "token":
+			token, _ = hex.DecodeString(cookie.Value)
+		}
+	}
+	if len(id) == 0 {
+		return false
+	}
+	h := hmac.New(sha256.New, key)
+	h.Write(id)
+	if hmac.Equal(h.Sum(nil), token) {
+		return true
+	}
+	return false
+}
+
+func getUserIDFROMCookie(r *http.Request) (string, error) {
+	cookie, err := r.Cookie("id")
+	if err != nil {
+		return "", err
+	}
+	return cookie.Value, nil
 }

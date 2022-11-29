@@ -9,6 +9,7 @@ import (
 
 func New(h *handler.Handler) http.Handler {
 	r := chi.NewRouter()
+	r.Use(handler.CheckCookies)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Compress(5))
 	r.Use(handler.DecompressGZRequest)
@@ -18,6 +19,7 @@ func New(h *handler.Handler) http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.SetHeader("Content-Type", "application/json"))
 		r.Post("/api/shorten", h.PostJSON)
+		r.Get("/api/user/urls", h.GetURLsByUser)
 	})
 
 	return r

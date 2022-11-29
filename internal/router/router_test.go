@@ -38,7 +38,7 @@ func TestRouter(t *testing.T) {
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
-	h.Storage.SetURL("tt123456", "http://ya.ru")
+	h.Storage.SetURL("user1", "tt123456", "http://ya.ru")
 
 	statusCode, body := testRequest(t, ts, "POST", "/", "http://longlonglong.lg")
 	assert.Equal(t, http.StatusCreated, statusCode)

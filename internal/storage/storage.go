@@ -10,12 +10,14 @@ import (
 )
 
 type link struct {
+	User  string
 	Short string
 	Long  string
 }
 
 type storage struct {
-	URLs map[string]string
+	URLs  map[string]string
+	Users map[string][]string
 }
 
 type fileStorage struct {
@@ -26,6 +28,7 @@ type fileStorage struct {
 func NewMemoryStorage() *storage {
 	return &storage{
 		make(map[string]string),
+		make(map[string][]string),
 	}
 }
 
@@ -39,6 +42,7 @@ func NewFileStorage(filename string) (*fileStorage, error) {
 	var buffer bytes.Buffer
 	var url link
 	urls := make(map[string]string)
+	users := make(map[string]string)
 	for {
 		b, err := rd.ReadBytes(13) // "\n"
 		if err != nil {
@@ -52,6 +56,8 @@ func NewFileStorage(filename string) (*fileStorage, error) {
 		buffer.Write(b)
 		gob.NewDecoder(&buffer).Decode(&url)
 		urls[url.Short] = url.Long
+		users[url.User] = url.User
+
 		buffer.Reset()
 	}
 	storage := NewMemoryStorage()
@@ -61,8 +67,9 @@ func NewFileStorage(filename string) (*fileStorage, error) {
 	}, nil
 }
 
-func (mStorage *storage) SetURL(short, long string) {
+func (mStorage *storage) SetURL(user, short, long string) {
 	mStorage.URLs[short] = long
+	mStorage.Users[user] = append(mStorage.Users[user], short)
 }
 
 func (mStorage *storage) GetURL(short string) string {
@@ -72,8 +79,23 @@ func (mStorage *storage) GetURL(short string) string {
 	return ""
 }
 
-func (fStorage *fileStorage) SetURL(short, long string) {
+func (mStorage *storage) GetURLsByUser(user string) (urls map[string]string) {
+	urls = make(map[string]string)
+	if shorts, ok := mStorage.Users[user]; ok {
+		for _, short := range shorts {
+			urls[short] = mStorage.URLs[short]
+		}
+		//url := link{}
+		//url.Short = short
+		//url.Long = mStorage.URLs[short]
+		//result = append(result, url)
+	}
+	return
+}
+
+func (fStorage *fileStorage) SetURL(user, short, long string) {
 	fStorage.URLs[short] = long
+	fStorage.Users[user] = append(fStorage.Users[user], short)
 	file, err := os.OpenFile(fStorage.filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0777)
 	if err != nil {
 		panic(err)
@@ -81,6 +103,7 @@ func (fStorage *fileStorage) SetURL(short, long string) {
 	defer file.Close()
 	var buffer bytes.Buffer
 	link := link{
+		User:  user,
 		Short: short,
 		Long:  long,
 	}
@@ -88,6 +111,21 @@ func (fStorage *fileStorage) SetURL(short, long string) {
 		panic(err)
 	}
 	file.Write(append(buffer.Bytes(), 13))
+}
+
+func (fStorage *fileStorage) GetURLsByUser(user string) (urls map[string]string) {
+	urls = make(map[string]string)
+	if shorts, ok := fStorage.Users[user]; ok {
+
+		for _, short := range shorts {
+			urls[short] = fStorage.URLs[short]
+			//url := link{}
+			//url.Short = short
+			//url.Long = fStorage.URLs[short]
+			//result = append(result, url)
+		}
+	}
+	return
 }
 
 func (fStorage *fileStorage) GetURL(short string) string {
