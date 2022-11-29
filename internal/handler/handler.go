@@ -119,7 +119,7 @@ func (h *Handler) GetURLsByUser(w http.ResponseWriter, r *http.Request) {
 	var one link
 	var links []link
 	for key, value := range urls {
-		one.Short = key
+		one.Short = h.BaseURL + "/" + key
 		one.Long = value
 		links = append(links, one)
 	}
@@ -193,10 +193,7 @@ func verifyCookies(cookies []*http.Cookie) bool {
 	}
 	h := hmac.New(sha256.New, key)
 	h.Write(id)
-	if hmac.Equal(h.Sum(nil), token) {
-		return true
-	}
-	return false
+	return hmac.Equal(h.Sum(nil), token)
 }
 
 func getUserIDFROMCookie(r *http.Request) (string, error) {
