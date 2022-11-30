@@ -20,7 +20,15 @@ func New(cfg config.Config) (*App, error) {
 		SetURL(user, short, long string)
 		GetURL(short string) string
 		GetURLsByUser(user string) (urls map[string]string)
+		Ping() error
 	}
+	if len(cfg.Database) > 0 {
+		pgStorage, err := storage.NewPGXStorage(cfg.Database)
+		if err != nil {
+			log.Fatal(err)
+		}
+		s = pgStorage
+	} else
 	if len(cfg.FileStorage) > 0 {
 		fileStorage, err := storage.NewFileStorage(cfg.FileStorage)
 		if err != nil {

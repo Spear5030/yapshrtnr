@@ -23,6 +23,7 @@ type storage interface {
 	SetURL(user, short, long string)
 	GetURL(short string) string
 	GetURLsByUser(user string) (urls map[string]string)
+	Ping() error
 }
 
 type link struct {
@@ -74,6 +75,15 @@ func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Error(w, "Wrong ID", http.StatusBadRequest)
+}
+
+func (h *Handler) PingDB(w http.ResponseWriter, r *http.Request) {
+	if h.Storage.Ping() == nil {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	w.WriteHeader(http.StatusInternalServerError)
+
 }
 
 func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {

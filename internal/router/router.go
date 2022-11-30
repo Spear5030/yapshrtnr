@@ -14,6 +14,7 @@ func New(h *handler.Handler) http.Handler {
 	r.Use(middleware.Compress(5))
 	r.Use(handler.DecompressGZRequest)
 	r.Get("/{id}", h.GetURL)
+	r.Get("/ping", h.PingDB)
 	r.Post("/", h.PostURL)
 
 	r.Group(func(r chi.Router) {
