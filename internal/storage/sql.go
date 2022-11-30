@@ -27,7 +27,7 @@ func (pgStorage *pgStorage) Ping() error {
 }
 
 func (pgStorage *pgStorage) SetURL(user, short, long string) {
-	user, short, long = "", "", ""
+
 }
 
 func (pgStorage *pgStorage) GetURL(short string) string {
@@ -35,6 +35,5 @@ func (pgStorage *pgStorage) GetURL(short string) string {
 }
 
 func (pgStorage *pgStorage) GetURLsByUser(user string) (urls map[string]string) {
-	user = ""
 	return nil
 }
