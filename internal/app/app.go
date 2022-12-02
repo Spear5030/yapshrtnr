@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/Spear5030/yapshrtnr/db/migrate"
 	"github.com/Spear5030/yapshrtnr/internal/config"
 	"github.com/Spear5030/yapshrtnr/internal/handler"
 	"github.com/Spear5030/yapshrtnr/internal/router"
@@ -16,6 +17,12 @@ type App struct {
 }
 
 func New(cfg config.Config) (*App, error) {
+
+	err := migrate.Migrate(cfg.Database, migrate.Migrations)
+	if err != nil {
+		return nil, err
+	}
+
 	var s interface {
 		SetURL(user, short, long string)
 		GetURL(short string) string
@@ -28,8 +35,7 @@ func New(cfg config.Config) (*App, error) {
 			log.Fatal(err)
 		}
 		s = pgStorage
-	} else
-	if len(cfg.FileStorage) > 0 {
+	} else if len(cfg.FileStorage) > 0 {
 		fileStorage, err := storage.NewFileStorage(cfg.FileStorage)
 		if err != nil {
 			log.Fatal(err)
