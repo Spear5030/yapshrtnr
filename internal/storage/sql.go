@@ -74,7 +74,7 @@ func (pgStorage *pgStorage) SetBatchURLs(ctx context.Context, urls []domain.URL)
 		return err
 	}
 	defer tx.Rollback()
-	stmt, err := tx.PrepareContext(ctx, "INSERT INTO urls(short, long, userID) VALUES(?,?,?)")
+	stmt, err := tx.PrepareContext(ctx, "INSERT INTO urls(short, long, userID) VALUES($1,$2,$3);")
 	if err != nil {
 		fmt.Println("stmt")
 		return err
