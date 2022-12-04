@@ -1,8 +1,10 @@
 package app
 
 import (
+	"context"
 	"github.com/Spear5030/yapshrtnr/db/migrate"
 	"github.com/Spear5030/yapshrtnr/internal/config"
+	"github.com/Spear5030/yapshrtnr/internal/domain"
 	"github.com/Spear5030/yapshrtnr/internal/handler"
 	"github.com/Spear5030/yapshrtnr/internal/router"
 	"github.com/Spear5030/yapshrtnr/internal/storage"
@@ -22,6 +24,7 @@ func New(cfg config.Config) (*App, error) {
 		SetURL(user, short, long string)
 		GetURL(short string) string
 		GetURLsByUser(user string) (urls map[string]string)
+		SetBatchURLs(ctx context.Context, urls []domain.URL) error
 		Ping() error
 	}
 	if len(cfg.Database) > 0 {

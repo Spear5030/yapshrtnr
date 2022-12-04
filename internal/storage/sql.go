@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"github.com/Spear5030/yapshrtnr/internal/domain"
 	"log"
 	"time"
 
@@ -12,6 +13,15 @@ import (
 
 type pgStorage struct {
 	db *sql.DB
+}
+
+type URL struct {
+	domain.URL
+	CorrelationId string `db:"correlation_id"`
+}
+type ResultBatch struct {
+	long          string
+	correlationId string
 }
 
 func NewPGXStorage(dsn string) (*pgStorage, error) {
@@ -55,4 +65,23 @@ func (pgStorage *pgStorage) GetURL(short string) string {
 
 func (pgStorage *pgStorage) GetURLsByUser(user string) (urls map[string]string) {
 	return nil
+}
+
+func (pgStorage *pgStorage) SetBatchURLs(ctx context.Context, urls []domain.URL) error {
+	tx, err := pgStorage.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	stmt, err := tx.PrepareContext(ctx, "INSERT INTO urls(short, long, userID) VALUES(?,?,?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	for _, url := range urls {
+		if _, err = stmt.ExecContext(ctx, url.Short, url.Long, url.User); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
 }

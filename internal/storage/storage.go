@@ -3,8 +3,10 @@ package storage
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/gob"
 	"fmt"
+	"github.com/Spear5030/yapshrtnr/internal/domain"
 	"io"
 	"os"
 )
@@ -140,5 +142,13 @@ func (fStorage *fileStorage) Ping() error {
 }
 
 func (mStorage *storage) Ping() error {
+	return nil
+}
+
+func (mStorage *storage) SetBatchURLs(ctx context.Context, urls []domain.URL) error {
+	return nil
+}
+
+func (fStorage *fileStorage) SetBatchURLs(ctx context.Context, urls []domain.URL) error {
 	return nil
 }

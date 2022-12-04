@@ -2,16 +2,19 @@ package handler
 
 import (
 	"compress/gzip"
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/Spear5030/yapshrtnr/internal/domain"
 	"github.com/Spear5030/yapshrtnr/internal/module"
 	"io"
 	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type Handler struct {
@@ -23,6 +26,7 @@ type storage interface {
 	SetURL(user, short, long string)
 	GetURL(short string) string
 	GetURLsByUser(user string) (urls map[string]string)
+	SetBatchURLs(ctx context.Context, urls []domain.URL) error
 	Ping() error
 }
 
@@ -37,6 +41,22 @@ type input struct {
 
 type result struct {
 	Result string `json:"result"`
+}
+
+type batchInput struct {
+	Long          string `json:"original_url"`
+	CorrelationID string `json:"correlation_id"`
+}
+
+type batchTmp struct {
+	Short         string
+	Long          string
+	CorrelationId string
+}
+
+type batchResult struct {
+	Short         string `json:"short_url"`
+	CorrelationID string `json:"correlation_id"`
 }
 
 func New(storage storage, baseURL string) *Handler {
@@ -86,17 +106,69 @@ func (h *Handler) PingDB(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	inputs := make([]batchInput, 0)
+	if err = json.Unmarshal(b, &inputs); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	user, err := getUserIDFROMCookie(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	tmps := make([]batchTmp, 0, len(inputs))
+	urls := make([]domain.URL, 0, len(inputs))
+	for _, url := range inputs {
+		tmpShort, err := module.ShortingURL(url.Long)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+		tmps = append(tmps, batchTmp{
+			Short:         tmpShort,
+			Long:          url.Long,
+			CorrelationId: url.CorrelationID,
+		})
+		urls = append(urls, domain.URL{
+			User:  user,
+			Short: tmpShort,
+			Long:  url.Long,
+		})
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), time.Minute)
+	defer cancel()
+
+	result := make([]batchResult, len(inputs))
+	h.Storage.SetBatchURLs(ctx, urls)
+	for i, urlEnt := range tmps {
+		result[i] = batchResult{
+			Short:         fmt.Sprintf("%s/%s", h.BaseURL, urlEnt.Short),
+			CorrelationID: urlEnt.CorrelationId,
+		}
+	}
+	resJSON, err := json.Marshal(result)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	w.Write(resJSON)
+}
+
 func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	url := input{}
-	if err := json.Unmarshal(b, &url); err != nil {
+	urlEnt := input{}
+	if err := json.Unmarshal(b, &urlEnt); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	short, err := module.ShortingURL(url.URL)
+	short, err := module.ShortingURL(urlEnt.URL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
@@ -104,7 +176,7 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	h.Storage.SetURL(user, short, url.URL)
+	h.Storage.SetURL(user, short, urlEnt.URL)
 
 	w.WriteHeader(201)
 	res := result{}
