@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/Spear5030/yapshrtnr/internal/domain"
 	"log"
 	"time"
@@ -75,11 +76,13 @@ func (pgStorage *pgStorage) SetBatchURLs(ctx context.Context, urls []domain.URL)
 	defer tx.Rollback()
 	stmt, err := tx.PrepareContext(ctx, "INSERT INTO urls(short, long, userID) VALUES(?,?,?)")
 	if err != nil {
+		fmt.Println("stmt")
 		return err
 	}
 	defer stmt.Close()
 	for _, url := range urls {
 		if _, err = stmt.ExecContext(ctx, url.Short, url.Long, url.User); err != nil {
+			fmt.Println("exec ", url)
 			return err
 		}
 	}
