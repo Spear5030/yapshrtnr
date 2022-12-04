@@ -144,7 +144,9 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	result := make([]batchResult, len(inputs))
-	fmt.Println(h.Storage.SetBatchURLs(ctx, urls))
+	if h.Storage.SetBatchURLs(ctx, urls) != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
 	for i, urlEnt := range tmps {
 		result[i] = batchResult{
 			Short:         fmt.Sprintf("%s/%s", h.BaseURL, urlEnt.Short),
