@@ -51,7 +51,7 @@ type batchInput struct {
 type batchTmp struct {
 	Short         string
 	Long          string
-	CorrelationId string
+	CorrelationID string
 }
 
 type batchResult struct {
@@ -132,7 +132,7 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 		tmps = append(tmps, batchTmp{
 			Short:         tmpShort,
 			Long:          url.Long,
-			CorrelationId: url.CorrelationID,
+			CorrelationID: url.CorrelationID,
 		})
 		urls = append(urls, domain.URL{
 			User:  user,
@@ -148,13 +148,14 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	for i, urlEnt := range tmps {
 		result[i] = batchResult{
 			Short:         fmt.Sprintf("%s/%s", h.BaseURL, urlEnt.Short),
-			CorrelationID: urlEnt.CorrelationId,
+			CorrelationID: urlEnt.CorrelationID,
 		}
 	}
 	resJSON, err := json.Marshal(result)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
+	w.WriteHeader(201)
 	w.Write(resJSON)
 }
 
