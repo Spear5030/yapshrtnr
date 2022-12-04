@@ -17,11 +17,11 @@ type pgStorage struct {
 
 type URL struct {
 	domain.URL
-	CorrelationId string `db:"correlation_id"`
+	CorrelationID string `db:"correlation_id"`
 }
 type ResultBatch struct {
 	long          string
-	correlationId string
+	correlationID string
 }
 
 func NewPGXStorage(dsn string) (*pgStorage, error) {
