@@ -34,7 +34,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path, body string) (
 func TestRouter(t *testing.T) {
 	cfg, err := config.New()
 	require.NoError(t, err)
-	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL)
+	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -58,7 +58,7 @@ func TestRouter(t *testing.T) {
 func TestGZRequest(t *testing.T) {
 	cfg, err := config.New()
 	require.NoError(t, err)
-	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL)
+	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -83,7 +83,7 @@ func TestGZRequest(t *testing.T) {
 func TestJSON(t *testing.T) {
 	cfg, err := config.New()
 	require.NoError(t, err)
-	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL)
+	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()

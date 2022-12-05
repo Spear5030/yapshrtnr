@@ -9,7 +9,7 @@ import (
 
 func New(h *handler.Handler) http.Handler {
 	r := chi.NewRouter()
-	r.Use(handler.CheckCookies)
+	r.Use(handler.CheckCookies(h.SecretKey))
 	r.Use(middleware.Logger)
 	r.Use(middleware.Compress(5))
 	r.Use(handler.DecompressGZRequest)

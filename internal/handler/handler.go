@@ -18,8 +18,9 @@ import (
 )
 
 type Handler struct {
-	Storage storage
-	BaseURL string
+	Storage   storage
+	BaseURL   string
+	SecretKey string
 }
 
 type storage interface {
@@ -59,10 +60,11 @@ type batchResult struct {
 	CorrelationID string `json:"correlation_id"`
 }
 
-func New(storage storage, baseURL string) *Handler {
+func New(storage storage, baseURL string, key string) *Handler {
 	return &Handler{
-		Storage: storage,
-		BaseURL: baseURL,
+		Storage:   storage,
+		BaseURL:   baseURL,
+		SecretKey: key,
 	}
 }
 
@@ -243,40 +245,43 @@ func DecompressGZRequest(next http.Handler) http.Handler {
 	})
 }
 
-func CheckCookies(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookies := r.Cookies()
-		if verifyCookies(cookies) { // TODO rewrite
+// проброс ключа в middleware подсмотрел в chi - кажется немного монстроузно, но лаконичней ничего не придумалось
+func CheckCookies(secretKey string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			cookies := r.Cookies()
+			if verifyCookies(cookies, secretKey) {
 
-		} else {
-			b := make([]byte, 16)
-			_, _ = rand.Read(b)
-			id := sha256.Sum256(b)
-			key := []byte("strongKey") // TODO move to config
-			h := hmac.New(sha256.New, key)
-			h.Write(id[:])
-			dst := h.Sum(nil)
-			cookie := &http.Cookie{
-				Name:  "id",
-				Value: fmt.Sprintf("%x", id),
-				Path:  "/",
+			} else {
+				b := make([]byte, 16)
+				_, _ = rand.Read(b)
+				id := sha256.Sum256(b)
+				key := []byte(secretKey)
+				h := hmac.New(sha256.New, key)
+				h.Write(id[:])
+				dst := h.Sum(nil)
+				cookie := &http.Cookie{
+					Name:  "id",
+					Value: fmt.Sprintf("%x", id),
+					Path:  "/",
+				}
+				http.SetCookie(w, cookie)
+				r.AddCookie(cookie)
+				cookie = &http.Cookie{
+					Name:  "token",
+					Value: fmt.Sprintf("%x", dst),
+					Path:  "/",
+				}
+				http.SetCookie(w, cookie)
+				r.AddCookie(cookie)
 			}
-			http.SetCookie(w, cookie)
-			r.AddCookie(cookie)
-			cookie = &http.Cookie{
-				Name:  "token",
-				Value: fmt.Sprintf("%x", dst),
-				Path:  "/",
-			}
-			http.SetCookie(w, cookie)
-			r.AddCookie(cookie)
-		}
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
-func verifyCookies(cookies []*http.Cookie) bool {
-	key := []byte("strongKey") // TODO move to config
+func verifyCookies(cookies []*http.Cookie, secretKey string) bool {
+	key := []byte(secretKey)
 	var id, token []byte
 	for _, cookie := range cookies {
 		switch cookie.Name {

@@ -47,7 +47,7 @@ func New(cfg config.Config) (*App, error) {
 		memoryStorage := storage.NewMemoryStorage()
 		s = memoryStorage
 	}
-	h := handler.New(s, cfg.BaseURL)
+	h := handler.New(s, cfg.BaseURL, cfg.Key)
 	r := router.New(h)
 	srv := &http.Server{
 		Addr:    cfg.Addr,
