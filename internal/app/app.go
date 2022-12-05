@@ -21,7 +21,7 @@ type App struct {
 func New(cfg config.Config) (*App, error) {
 
 	var s interface {
-		SetURL(user, short, long string)
+		SetURL(user, short, long string) string
 		GetURL(short string) string
 		GetURLsByUser(user string) (urls map[string]string)
 		SetBatchURLs(ctx context.Context, urls []domain.URL) error

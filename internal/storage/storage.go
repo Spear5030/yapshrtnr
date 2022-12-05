@@ -69,9 +69,10 @@ func NewFileStorage(filename string) (*fileStorage, error) {
 	}, nil
 }
 
-func (mStorage *storage) SetURL(user, short, long string) {
+func (mStorage *storage) SetURL(user, short, long string) string {
 	mStorage.URLs[short] = long
 	mStorage.Users[user] = append(mStorage.Users[user], short)
+	return ""
 }
 
 func (mStorage *storage) GetURL(short string) string {
@@ -95,7 +96,7 @@ func (mStorage *storage) GetURLsByUser(user string) (urls map[string]string) {
 	return
 }
 
-func (fStorage *fileStorage) SetURL(user, short, long string) {
+func (fStorage *fileStorage) SetURL(user, short, long string) string {
 	fStorage.URLs[short] = long
 	fStorage.Users[user] = append(fStorage.Users[user], short)
 	file, err := os.OpenFile(fStorage.filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0777)
@@ -113,6 +114,7 @@ func (fStorage *fileStorage) SetURL(user, short, long string) {
 		panic(err)
 	}
 	file.Write(append(buffer.Bytes(), 13))
+	return ""
 }
 
 func (fStorage *fileStorage) GetURLsByUser(user string) (urls map[string]string) {

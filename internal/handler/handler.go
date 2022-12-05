@@ -23,7 +23,7 @@ type Handler struct {
 }
 
 type storage interface {
-	SetURL(user, short, long string)
+	SetURL(user, short, long string) string
 	GetURL(short string) string
 	GetURLsByUser(user string) (urls map[string]string)
 	SetBatchURLs(ctx context.Context, urls []domain.URL) error
@@ -80,10 +80,16 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	h.Storage.SetURL(user, short, string(b))
 
-	w.WriteHeader(201)
-	w.Write([]byte(fmt.Sprintf("%s/%s", h.BaseURL, short)))
+	result := h.Storage.SetURL(user, short, string(b))
+
+	if len(result) > 0 {
+		w.WriteHeader(http.StatusConflict)
+		w.Write([]byte(fmt.Sprintf("%s/%s", h.BaseURL, result)))
+	} else {
+		w.WriteHeader(201)
+		w.Write([]byte(fmt.Sprintf("%s/%s", h.BaseURL, short)))
+	}
 }
 
 func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
@@ -157,7 +163,7 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	w.WriteHeader(201)
+	w.WriteHeader(http.StatusCreated)
 	w.Write(resJSON)
 }
 
@@ -179,11 +185,18 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	h.Storage.SetURL(user, short, urlEnt.URL)
 
-	w.WriteHeader(201)
+	shortOfDup := h.Storage.SetURL(user, short, urlEnt.URL)
 	res := result{}
-	res.Result = fmt.Sprintf("%s/%s", h.BaseURL, short)
+
+	if len(shortOfDup) > 0 {
+		w.WriteHeader(http.StatusConflict)
+		res.Result = fmt.Sprintf("%s/%s", h.BaseURL, shortOfDup)
+	} else {
+		w.WriteHeader(http.StatusCreated)
+		res.Result = fmt.Sprintf("%s/%s", h.BaseURL, short)
+	}
+
 	resJSON, err := json.Marshal(res)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

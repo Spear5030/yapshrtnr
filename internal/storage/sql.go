@@ -3,7 +3,10 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"github.com/Spear5030/yapshrtnr/internal/domain"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"log"
 	"time"
 
@@ -40,16 +43,27 @@ func (pgStorage *pgStorage) Ping() error {
 	return err
 }
 
-func (pgStorage *pgStorage) SetURL(user, short, long string) {
+func (pgStorage *pgStorage) SetURL(user, short, long string) (result string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	query := `INSERT INTO urls(short, long, userID) 
           			VALUES($1, $2, $3);`
 	_, err := pgStorage.db.ExecContext(ctx, query, short, long, user)
+	var pgErr *pgconn.PgError
 	if err != nil {
-		log.Print(err.Error())
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			query := `SELECT short FROM urls WHERE long=$1;`
+			row := pgStorage.db.QueryRowContext(ctx, query, long)
+			row.Scan(&short)
+			return short
+		} else {
+			log.Print(err.Error())
+		}
 	}
+	return ""
 }
 
 func (pgStorage *pgStorage) GetURL(short string) string {
