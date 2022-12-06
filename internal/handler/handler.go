@@ -7,9 +7,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/Spear5030/yapshrtnr/internal/domain"
 	"github.com/Spear5030/yapshrtnr/internal/module"
+	pckgstorage "github.com/Spear5030/yapshrtnr/internal/storage"
 	"io"
 	"math/rand"
 	"net/http"
@@ -24,7 +26,7 @@ type Handler struct {
 }
 
 type storage interface {
-	SetURL(user, short, long string) string
+	SetURL(user, short, long string) error
 	GetURL(short string) string
 	GetURLsByUser(user string) (urls map[string]string)
 	SetBatchURLs(ctx context.Context, urls []domain.URL) error
@@ -83,15 +85,22 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	result := h.Storage.SetURL(user, short, string(b))
+	err = h.Storage.SetURL(user, short, string(b))
 
-	if len(result) > 0 {
-		w.WriteHeader(http.StatusConflict)
-		w.Write([]byte(fmt.Sprintf("%s/%s", h.BaseURL, result)))
-	} else {
-		w.WriteHeader(201)
-		w.Write([]byte(fmt.Sprintf("%s/%s", h.BaseURL, short)))
+	var de *pckgstorage.DuplicationError
+	status := http.StatusCreated
+	res := fmt.Sprintf("%s/%s", h.BaseURL, short)
+	if err != nil {
+		if !errors.As(err, &de) {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		} else {
+			status = http.StatusConflict
+			res = fmt.Sprintf("%s/%s", h.BaseURL, de.Duplication)
+		}
 	}
+	w.WriteHeader(status)
+	w.Write([]byte(res))
 }
 
 func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
@@ -188,17 +197,22 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	shortOfDup := h.Storage.SetURL(user, short, urlEnt.URL)
+	err = h.Storage.SetURL(user, short, urlEnt.URL)
 	res := result{}
 
-	if len(shortOfDup) > 0 {
-		w.WriteHeader(http.StatusConflict)
-		res.Result = fmt.Sprintf("%s/%s", h.BaseURL, shortOfDup)
-	} else {
-		w.WriteHeader(http.StatusCreated)
-		res.Result = fmt.Sprintf("%s/%s", h.BaseURL, short)
+	var de *pckgstorage.DuplicationError
+	status := http.StatusCreated
+	res.Result = fmt.Sprintf("%s/%s", h.BaseURL, short)
+	if err != nil {
+		if !errors.As(err, &de) {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		} else {
+			status = http.StatusConflict
+			res.Result = fmt.Sprintf("%s/%s", h.BaseURL, de.Duplication)
+		}
 	}
-
+	w.WriteHeader(status)
 	resJSON, err := json.Marshal(res)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

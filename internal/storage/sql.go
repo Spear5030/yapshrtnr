@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/Spear5030/yapshrtnr/internal/domain"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -27,6 +28,22 @@ type ResultBatch struct {
 	correlationID string
 }
 
+type DuplicationError struct {
+	Duplication string
+	Err         error
+}
+
+func (derr *DuplicationError) Error() string {
+	return fmt.Sprintf("%v", derr.Err)
+}
+
+func NewDuplicationError(dup string, err error) error {
+	return &DuplicationError{
+		Duplication: dup,
+		Err:         err,
+	}
+}
+
 func NewPGXStorage(dsn string) (*pgStorage, error) {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
@@ -43,7 +60,7 @@ func (pgStorage *pgStorage) Ping() error {
 	return err
 }
 
-func (pgStorage *pgStorage) SetURL(user, short, long string) (result string) {
+func (pgStorage *pgStorage) SetURL(user, short, long string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -58,12 +75,13 @@ func (pgStorage *pgStorage) SetURL(user, short, long string) (result string) {
 			query := `SELECT short FROM urls WHERE long=$1;`
 			row := pgStorage.db.QueryRowContext(ctx, query, long)
 			row.Scan(&short)
-			return short
+			return NewDuplicationError(short, err)
 		} else {
 			log.Print(err.Error())
+			return err
 		}
 	}
-	return ""
+	return nil
 }
 
 func (pgStorage *pgStorage) GetURL(short string) string {
