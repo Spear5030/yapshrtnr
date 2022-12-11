@@ -20,10 +20,10 @@ type App struct {
 
 func New(cfg config.Config) (*App, error) {
 
-	var s interface {
-		SetURL(user, short, long string) error
-		GetURL(short string) string
-		GetURLsByUser(user string) (urls map[string]string)
+	var storager interface {
+		SetURL(ctx context.Context, user, short, long string) error
+		GetURL(ctx context.Context, short string) string
+		GetURLsByUser(ctx context.Context, user string) (urls map[string]string)
 		SetBatchURLs(ctx context.Context, urls []domain.URL) error
 		Ping() error
 	}
@@ -36,18 +36,18 @@ func New(cfg config.Config) (*App, error) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		s = pgStorage
+		storager = pgStorage
 	} else if len(cfg.FileStorage) > 0 {
 		fileStorage, err := storage.NewFileStorage(cfg.FileStorage)
 		if err != nil {
 			log.Fatal(err)
 		}
-		s = fileStorage
+		storager = fileStorage
 	} else {
 		memoryStorage := storage.NewMemoryStorage()
-		s = memoryStorage
+		storager = memoryStorage
 	}
-	h := handler.New(s, cfg.BaseURL, cfg.Key)
+	h := handler.New(storager, cfg.BaseURL, cfg.Key)
 	r := router.New(h)
 	srv := &http.Server{
 		Addr:    cfg.Addr,

@@ -3,6 +3,7 @@ package router
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"github.com/Spear5030/yapshrtnr/internal/config"
 	"github.com/Spear5030/yapshrtnr/internal/handler"
@@ -38,7 +39,7 @@ func TestRouter(t *testing.T) {
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
-	h.Storage.SetURL("user1", "tt123456", "http://ya.ru")
+	h.Storage.SetURL(context.Background(), "user1", "tt123456", "http://ya.ru")
 
 	statusCode, body := testRequest(t, ts, "POST", "/", "http://longlonglong.lg")
 	assert.Equal(t, http.StatusCreated, statusCode)

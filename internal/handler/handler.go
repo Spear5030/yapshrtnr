@@ -26,9 +26,9 @@ type Handler struct {
 }
 
 type storage interface {
-	SetURL(user, short, long string) error
-	GetURL(short string) string
-	GetURLsByUser(user string) (urls map[string]string)
+	SetURL(ctx context.Context, user, short, long string) error
+	GetURL(ctx context.Context, short string) string
+	GetURLsByUser(ctx context.Context, user string) (urls map[string]string)
 	SetBatchURLs(ctx context.Context, urls []domain.URL) error
 	Ping() error
 }
@@ -85,7 +85,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	err = h.Storage.SetURL(user, short, string(b))
+	err = h.Storage.SetURL(r.Context(), user, short, string(b))
 
 	var de *pckgstorage.DuplicationError
 	status := http.StatusCreated
@@ -105,7 +105,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 	short := strings.TrimLeft(r.URL.Path, "/")
-	v := h.Storage.GetURL(short)
+	v := h.Storage.GetURL(r.Context(), short)
 	if len(v) > 0 {
 		w.Header().Set("Location", v)
 		w.WriteHeader(307)
@@ -197,7 +197,7 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	err = h.Storage.SetURL(user, short, urlEnt.URL)
+	err = h.Storage.SetURL(r.Context(), user, short, urlEnt.URL)
 	res := result{}
 
 	var de *pckgstorage.DuplicationError
@@ -226,7 +226,7 @@ func (h *Handler) GetURLsByUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	urls := h.Storage.GetURLsByUser(cookie.Value)
+	urls := h.Storage.GetURLsByUser(r.Context(), cookie.Value)
 	if len(urls) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 	}

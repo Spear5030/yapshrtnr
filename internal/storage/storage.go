@@ -69,20 +69,20 @@ func NewFileStorage(filename string) (*fileStorage, error) {
 	}, nil
 }
 
-func (mStorage *storage) SetURL(user, short, long string) error {
+func (mStorage *storage) SetURL(ctx context.Context, user, short, long string) error {
 	mStorage.URLs[short] = long
 	mStorage.Users[user] = append(mStorage.Users[user], short)
 	return nil
 }
 
-func (mStorage *storage) GetURL(short string) string {
+func (mStorage *storage) GetURL(ctx context.Context, short string) string {
 	if v, ok := mStorage.URLs[short]; ok {
 		return v
 	}
 	return ""
 }
 
-func (mStorage *storage) GetURLsByUser(user string) (urls map[string]string) {
+func (mStorage *storage) GetURLsByUser(ctx context.Context, user string) (urls map[string]string) {
 	urls = make(map[string]string)
 	if shorts, ok := mStorage.Users[user]; ok {
 		for _, short := range shorts {
@@ -96,7 +96,7 @@ func (mStorage *storage) GetURLsByUser(user string) (urls map[string]string) {
 	return
 }
 
-func (fStorage *fileStorage) SetURL(user, short, long string) error {
+func (fStorage *fileStorage) SetURL(ctx context.Context, user, short, long string) error {
 	fStorage.URLs[short] = long
 	fStorage.Users[user] = append(fStorage.Users[user], short)
 	file, err := os.OpenFile(fStorage.filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0777)
@@ -117,7 +117,7 @@ func (fStorage *fileStorage) SetURL(user, short, long string) error {
 	return nil
 }
 
-func (fStorage *fileStorage) GetURLsByUser(user string) (urls map[string]string) {
+func (fStorage *fileStorage) GetURLsByUser(ctx context.Context, user string) (urls map[string]string) {
 	urls = make(map[string]string)
 	if shorts, ok := fStorage.Users[user]; ok {
 
@@ -132,7 +132,7 @@ func (fStorage *fileStorage) GetURLsByUser(user string) (urls map[string]string)
 	return
 }
 
-func (fStorage *fileStorage) GetURL(short string) string {
+func (fStorage *fileStorage) GetURL(ctx context.Context, short string) string {
 	if v, ok := fStorage.URLs[short]; ok {
 		return v
 	}
