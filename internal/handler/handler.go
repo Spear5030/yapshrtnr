@@ -116,7 +116,7 @@ func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) PingDB(w http.ResponseWriter, r *http.Request) {
 	pinger, ok := h.Storage.(pckgstorage.Pinger)
 	if ok {
-		if pinger.Ping(r.Context()) == nil {
+		if pinger.Ping() == nil {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
