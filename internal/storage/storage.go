@@ -139,10 +139,6 @@ func (fStorage *fileStorage) GetURL(ctx context.Context, short string) string {
 	return ""
 }
 
-func (fStorage *fileStorage) Ping() error {
-	return nil
-}
-
 func (mStorage *storage) Ping() error {
 	return nil
 }

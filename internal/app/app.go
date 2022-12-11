@@ -25,7 +25,7 @@ func New(cfg config.Config) (*App, error) {
 		GetURL(ctx context.Context, short string) string
 		GetURLsByUser(ctx context.Context, user string) (urls map[string]string)
 		SetBatchURLs(ctx context.Context, urls []domain.URL) error
-		Ping() error
+		//		Ping() error
 	}
 	if len(cfg.Database) > 0 {
 		err := migrate.Migrate(cfg.Database, migrate.Migrations)

@@ -30,7 +30,6 @@ type storage interface {
 	GetURL(ctx context.Context, short string) string
 	GetURLsByUser(ctx context.Context, user string) (urls map[string]string)
 	SetBatchURLs(ctx context.Context, urls []domain.URL) error
-	Ping() error
 }
 
 type link struct {
@@ -115,10 +114,14 @@ func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PingDB(w http.ResponseWriter, r *http.Request) {
-	if h.Storage.Ping() == nil {
-		w.WriteHeader(http.StatusOK)
-		return
+	pinger, ok := h.Storage.(pckgstorage.Pinger)
+	if ok {
+		if pinger.Ping(r.Context()) == nil {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 	}
+	//log.Fatal("Storage haven't pinger")
 	w.WriteHeader(http.StatusInternalServerError)
 
 }
@@ -260,6 +263,7 @@ func DecompressGZRequest(next http.Handler) http.Handler {
 }
 
 // проброс ключа в middleware подсмотрел в chi - кажется немного монстроузно, но лаконичней ничего не придумалось
+
 func CheckCookies(secretKey string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -37,6 +37,10 @@ func (derr *DuplicationError) Error() string {
 	return fmt.Sprintf("%v", derr.Err)
 }
 
+type Pinger interface {
+	Ping(ctx context.Context) error
+}
+
 func NewDuplicationError(dup string, err error) error {
 	return &DuplicationError{
 		Duplication: dup,
@@ -52,7 +56,9 @@ func NewPGXStorage(dsn string) (*pgStorage, error) {
 	return &pgStorage{db: db}, nil
 }
 
-func (pgStorage *pgStorage) Ping() error {
+func (pgStorage *pgStorage) Ping(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	err := pgStorage.db.Ping()
 	if err != nil {
 		panic(err)
