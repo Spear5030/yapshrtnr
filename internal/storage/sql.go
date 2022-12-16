@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	//_ "github.com/jackc/pgx"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 

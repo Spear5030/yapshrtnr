@@ -8,6 +8,8 @@ import (
 	"github.com/Spear5030/yapshrtnr/internal/handler"
 	"github.com/Spear5030/yapshrtnr/internal/router"
 	"github.com/Spear5030/yapshrtnr/internal/storage"
+	"github.com/Spear5030/yapshrtnr/pkg/logger"
+	"go.uber.org/zap"
 	"log"
 	"math/rand"
 	"net/http"
@@ -16,6 +18,7 @@ import (
 
 type App struct {
 	HTTPServer *http.Server
+	logger     *zap.Logger
 }
 
 func New(cfg config.Config) (*App, error) {
@@ -27,6 +30,12 @@ func New(cfg config.Config) (*App, error) {
 		SetBatchURLs(ctx context.Context, urls []domain.URL) error
 		//		Ping() error
 	}
+
+	lg, err := logger.New(true)
+	if err != nil {
+		return nil, err
+	}
+
 	if len(cfg.Database) > 0 {
 		err := migrate.Migrate(cfg.Database, migrate.Migrations)
 		if err != nil {
@@ -47,7 +56,7 @@ func New(cfg config.Config) (*App, error) {
 		memoryStorage := storage.NewMemoryStorage()
 		storager = memoryStorage
 	}
-	h := handler.New(storager, cfg.BaseURL, cfg.Key)
+	h := handler.New(lg, storager, cfg.BaseURL, cfg.Key)
 	r := router.New(h)
 	srv := &http.Server{
 		Addr:    cfg.Addr,

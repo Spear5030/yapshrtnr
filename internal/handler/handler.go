@@ -12,6 +12,7 @@ import (
 	"github.com/Spear5030/yapshrtnr/internal/domain"
 	"github.com/Spear5030/yapshrtnr/internal/module"
 	pckgstorage "github.com/Spear5030/yapshrtnr/internal/storage"
+	"go.uber.org/zap"
 	"io"
 	"math/rand"
 	"net/http"
@@ -21,6 +22,7 @@ import (
 
 type Handler struct {
 	Storage   storage
+	logger    *zap.Logger
 	BaseURL   string
 	SecretKey string
 }
@@ -61,8 +63,9 @@ type batchResult struct {
 	CorrelationID string `json:"correlation_id"`
 }
 
-func New(storage storage, baseURL string, key string) *Handler {
+func New(logger *zap.Logger, storage storage, baseURL string, key string) *Handler {
 	return &Handler{
+		logger:    logger,
 		Storage:   storage,
 		BaseURL:   baseURL,
 		SecretKey: key,
@@ -221,6 +224,10 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	w.Write(resJSON)
+}
+
+func (h *Handler) DeleteBatchByUser(w http.ResponseWriter, r *http.Request) {
+
 }
 
 func (h *Handler) GetURLsByUser(w http.ResponseWriter, r *http.Request) {
