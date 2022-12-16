@@ -3,6 +3,7 @@ package router
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"github.com/Spear5030/yapshrtnr/internal/config"
 	"github.com/Spear5030/yapshrtnr/internal/handler"
@@ -34,11 +35,11 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path, body string) (
 func TestRouter(t *testing.T) {
 	cfg, err := config.New()
 	require.NoError(t, err)
-	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL)
+	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
-	h.Storage.SetURL("tt123456", "http://ya.ru")
+	h.Storage.SetURL(context.Background(), "user1", "tt123456", "http://ya.ru")
 
 	statusCode, body := testRequest(t, ts, "POST", "/", "http://longlonglong.lg")
 	assert.Equal(t, http.StatusCreated, statusCode)
@@ -58,7 +59,7 @@ func TestRouter(t *testing.T) {
 func TestGZRequest(t *testing.T) {
 	cfg, err := config.New()
 	require.NoError(t, err)
-	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL)
+	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -83,7 +84,7 @@ func TestGZRequest(t *testing.T) {
 func TestJSON(t *testing.T) {
 	cfg, err := config.New()
 	require.NoError(t, err)
-	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL)
+	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()

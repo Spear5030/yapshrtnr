@@ -3,19 +3,23 @@ package storage
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/gob"
 	"fmt"
+	"github.com/Spear5030/yapshrtnr/internal/domain"
 	"io"
 	"os"
 )
 
 type link struct {
+	User  string
 	Short string
 	Long  string
 }
 
 type storage struct {
-	URLs map[string]string
+	URLs  map[string]string
+	Users map[string][]string
 }
 
 type fileStorage struct {
@@ -26,6 +30,7 @@ type fileStorage struct {
 func NewMemoryStorage() *storage {
 	return &storage{
 		make(map[string]string),
+		make(map[string][]string),
 	}
 }
 
@@ -39,6 +44,7 @@ func NewFileStorage(filename string) (*fileStorage, error) {
 	var buffer bytes.Buffer
 	var url link
 	urls := make(map[string]string)
+	users := make(map[string]string)
 	for {
 		b, err := rd.ReadBytes(13) // "\n"
 		if err != nil {
@@ -52,6 +58,8 @@ func NewFileStorage(filename string) (*fileStorage, error) {
 		buffer.Write(b)
 		gob.NewDecoder(&buffer).Decode(&url)
 		urls[url.Short] = url.Long
+		users[url.User] = url.User
+
 		buffer.Reset()
 	}
 	storage := NewMemoryStorage()
@@ -61,19 +69,36 @@ func NewFileStorage(filename string) (*fileStorage, error) {
 	}, nil
 }
 
-func (mStorage *storage) SetURL(short, long string) {
+func (mStorage *storage) SetURL(ctx context.Context, user, short, long string) error {
 	mStorage.URLs[short] = long
+	mStorage.Users[user] = append(mStorage.Users[user], short)
+	return nil
 }
 
-func (mStorage *storage) GetURL(short string) string {
+func (mStorage *storage) GetURL(ctx context.Context, short string) string {
 	if v, ok := mStorage.URLs[short]; ok {
 		return v
 	}
 	return ""
 }
 
-func (fStorage *fileStorage) SetURL(short, long string) {
+func (mStorage *storage) GetURLsByUser(ctx context.Context, user string) (urls map[string]string) {
+	urls = make(map[string]string)
+	if shorts, ok := mStorage.Users[user]; ok {
+		for _, short := range shorts {
+			urls[short] = mStorage.URLs[short]
+		}
+		//url := link{}
+		//url.Short = short
+		//url.Long = mStorage.URLs[short]
+		//result = append(result, url)
+	}
+	return
+}
+
+func (fStorage *fileStorage) SetURL(ctx context.Context, user, short, long string) error {
 	fStorage.URLs[short] = long
+	fStorage.Users[user] = append(fStorage.Users[user], short)
 	file, err := os.OpenFile(fStorage.filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0777)
 	if err != nil {
 		panic(err)
@@ -81,6 +106,7 @@ func (fStorage *fileStorage) SetURL(short, long string) {
 	defer file.Close()
 	var buffer bytes.Buffer
 	link := link{
+		User:  user,
 		Short: short,
 		Long:  long,
 	}
@@ -88,11 +114,39 @@ func (fStorage *fileStorage) SetURL(short, long string) {
 		panic(err)
 	}
 	file.Write(append(buffer.Bytes(), 13))
+	return nil
 }
 
-func (fStorage *fileStorage) GetURL(short string) string {
+func (fStorage *fileStorage) GetURLsByUser(ctx context.Context, user string) (urls map[string]string) {
+	urls = make(map[string]string)
+	if shorts, ok := fStorage.Users[user]; ok {
+
+		for _, short := range shorts {
+			urls[short] = fStorage.URLs[short]
+			//url := link{}
+			//url.Short = short
+			//url.Long = fStorage.URLs[short]
+			//result = append(result, url)
+		}
+	}
+	return
+}
+
+func (fStorage *fileStorage) GetURL(ctx context.Context, short string) string {
 	if v, ok := fStorage.URLs[short]; ok {
 		return v
 	}
 	return ""
+}
+
+func (mStorage *storage) Ping() error {
+	return nil
+}
+
+func (mStorage *storage) SetBatchURLs(ctx context.Context, urls []domain.URL) error {
+	return nil
+}
+
+func (fStorage *fileStorage) SetBatchURLs(ctx context.Context, urls []domain.URL) error {
+	return nil
 }
