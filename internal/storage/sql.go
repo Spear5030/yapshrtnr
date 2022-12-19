@@ -102,6 +102,9 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch() {
 			ctxByUser[x.user] = x.ctx
 		case <-pgStorage.deleteWork:
 			log.Println(urlsByUser)
+			if len(urlsByUser) == 0 {
+				return
+			}
 			for user, shorts := range urlsByUser {
 				log.Println(user, " deleted ", shorts)
 				err := pgStorage.DeleteBatchURLs(ctxByUser[user], user, shorts)
