@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS urls
     deleted    BOOLEAN      DEFAULT FALSE
 );
  CREATE UNIQUE INDEX long_idx1 ON urls (long);
--- +goose StatementEnd //тест ругается на существование индекса
+-- +goose StatementEnd
 
 -- +goose Down
 DROP TABLE urls;
