@@ -84,7 +84,7 @@ func (pgStorage *pgStorage) Ping() error {
 }
 
 func (pgStorage *pgStorage) DeleteURLs(ctx context.Context, user string, shorts []string) {
-	time.AfterFunc(30*time.Millisecond, func() {
+	time.AfterFunc(10*time.Millisecond, func() {
 		pgStorage.deleteWork <- true
 	})
 	chunk := urlsForDelete{user, shorts, ctx}
