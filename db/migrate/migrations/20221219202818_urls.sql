@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS urls
     userID     VARCHAR      NOT NULL,
     deleted    BOOLEAN      DEFAULT FALSE
 );
-CREATE UNIQUE INDEX long_idx1 ON urls (long);
 -- +goose StatementEnd
 
 -- +goose Down
