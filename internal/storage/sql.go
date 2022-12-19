@@ -118,8 +118,8 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch() {
 }
 
 func (pgStorage *pgStorage) DeleteBatchURLs(ctx context.Context, user string, shorts []string) error {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
+	//ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	//defer cancel()
 
 	query := `UPDATE urls SET deleted = true WHERE userID = $1 AND short = ANY $2);`
 	_, err := pgStorage.db.ExecContext(ctx, query, user, shorts)
