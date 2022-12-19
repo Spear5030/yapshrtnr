@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS urls
     long       VARCHAR      NOT NULL,
     userID     VARCHAR      NOT NULL
 );
-CREATE UNIQUE INDEX long_idx1 ON urls (long);
 -- +goose StatementEnd
 
 -- +goose Down
