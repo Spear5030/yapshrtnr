@@ -109,7 +109,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 	short := strings.TrimLeft(r.URL.Path, "/")
 	v, deleted := h.Storage.GetURL(r.Context(), short)
-	if deleted == true {
+	if deleted {
 		w.WriteHeader(http.StatusGone)
 		return
 	}
