@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS urls
     userID     VARCHAR      NOT NULL,
     deleted    BOOLEAN      DEFAULT FALSE
 );
-CREATE UNIQUE INDEX long_idx1 ON urls (long);
+-- CREATE UNIQUE INDEX long_idx1 ON urls (long); //тест ругается на существование индекса
 -- +goose StatementEnd
 
 -- +goose Down
