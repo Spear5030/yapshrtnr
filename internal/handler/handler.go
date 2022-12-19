@@ -17,7 +17,6 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
-	"time"
 )
 
 type Handler struct {
@@ -131,7 +130,6 @@ func (h *Handler) PingDB(w http.ResponseWriter, r *http.Request) {
 	}
 	//log.Fatal("Storage haven't pinger")
 	w.WriteHeader(http.StatusInternalServerError)
-
 }
 
 func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
@@ -168,11 +166,9 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 			Long:  url.Long,
 		})
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), time.Minute)
-	defer cancel()
 
 	result := make([]batchResult, len(inputs))
-	if h.Storage.SetBatchURLs(ctx, urls) != nil {
+	if h.Storage.SetBatchURLs(r.Context(), urls) != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	for i, urlEnt := range tmps {
@@ -185,6 +181,7 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
+	h.logger.Debug(string(resJSON))
 	w.WriteHeader(http.StatusCreated)
 	w.Write(resJSON)
 }

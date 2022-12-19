@@ -167,6 +167,9 @@ func (pgStorage *pgStorage) GetURLsByUser(ctx context.Context, user string) (url
 }
 
 func (pgStorage *pgStorage) SetBatchURLs(ctx context.Context, urls []domain.URL) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	tx, err := pgStorage.db.Begin()
 	if err != nil {
 		return err
