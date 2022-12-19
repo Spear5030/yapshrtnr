@@ -16,7 +16,6 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -108,10 +107,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 	short := strings.TrimLeft(r.URL.Path, "/")
-	h.logger.Debug(short)
 	v, deleted := h.Storage.GetURL(r.Context(), short)
-	h.logger.Debug(v)
-	h.logger.Debug(strconv.FormatBool(deleted))
 	if deleted {
 		w.WriteHeader(http.StatusGone)
 		return
