@@ -28,6 +28,7 @@ func New(cfg config.Config) (*App, error) {
 		GetURL(ctx context.Context, short string) string
 		GetURLsByUser(ctx context.Context, user string) (urls map[string]string)
 		SetBatchURLs(ctx context.Context, urls []domain.URL) error
+		DeleteURLs(ctx context.Context, user string, shorts []string)
 		//		Ping() error
 	}
 

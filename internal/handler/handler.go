@@ -32,6 +32,7 @@ type storage interface {
 	GetURL(ctx context.Context, short string) string
 	GetURLsByUser(ctx context.Context, user string) (urls map[string]string)
 	SetBatchURLs(ctx context.Context, urls []domain.URL) error
+	DeleteURLs(ctx context.Context, user string, shorts []string)
 }
 
 type link struct {
@@ -224,10 +225,6 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	w.Write(resJSON)
-}
-
-func (h *Handler) DeleteBatchByUser(w http.ResponseWriter, r *http.Request) {
-
 }
 
 func (h *Handler) GetURLsByUser(w http.ResponseWriter, r *http.Request) {

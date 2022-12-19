@@ -150,3 +150,11 @@ func (mStorage *storage) SetBatchURLs(ctx context.Context, urls []domain.URL) er
 func (fStorage *fileStorage) SetBatchURLs(ctx context.Context, urls []domain.URL) error {
 	return nil
 }
+
+func (mStorage *storage) DeleteURLs(ctx context.Context, user string, shorts []string) {
+
+}
+
+func (fStorage *fileStorage) DeleteURLs(ctx context.Context, user string, shorts []string) {
+
+}

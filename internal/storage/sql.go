@@ -15,7 +15,15 @@ import (
 )
 
 type pgStorage struct {
-	db *sql.DB
+	db         *sql.DB
+	chanForDel chan urlsForDelete
+	deleteWork chan bool
+}
+
+type urlsForDelete struct {
+	user   string
+	shorts []string
+	ctx    context.Context // не нравится, но не сообразил как реализовать передачу контекста
 }
 
 type URL struct {
@@ -50,13 +58,21 @@ func NewDuplicationError(dup string, err error) error {
 func NewPGXStorage(dsn string) (*pgStorage, error) {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	err = db.Ping()
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
-	return &pgStorage{db: db}, nil
+	pgS := pgStorage{
+		db:         db,
+		chanForDel: make(chan urlsForDelete),
+		deleteWork: make(chan bool),
+	}
+	go pgS.WorkWithDeleteBatch()
+	return &pgS, nil
 }
 
 func (pgStorage *pgStorage) Ping() error {
@@ -65,6 +81,49 @@ func (pgStorage *pgStorage) Ping() error {
 		panic(err)
 	}
 	return err
+}
+
+func (pgStorage *pgStorage) DeleteURLs(ctx context.Context, user string, shorts []string) {
+	time.AfterFunc(30*time.Second, func() {
+		pgStorage.deleteWork <- true
+	})
+	chunk := urlsForDelete{user, shorts, ctx}
+	pgStorage.chanForDel <- chunk
+}
+
+func (pgStorage *pgStorage) WorkWithDeleteBatch() {
+	urlsByUser := make(map[string][]string)
+	ctxByUser := make(map[string]context.Context)
+	for {
+		select {
+		case x := <-pgStorage.chanForDel:
+			log.Println(x.user, " will delete ", x.shorts)
+			urlsByUser[x.user] = append(urlsByUser[x.user], x.shorts...)
+			ctxByUser[x.user] = x.ctx
+		case <-pgStorage.deleteWork:
+			log.Println(urlsByUser)
+			for user, shorts := range urlsByUser {
+				log.Println(user, " deleted ", shorts)
+				err := pgStorage.DeleteBatchURLs(ctxByUser[user], user, shorts)
+				if err != nil {
+					log.Println(err)
+				}
+			}
+			urlsByUser = make(map[string][]string)
+		}
+	}
+}
+
+func (pgStorage *pgStorage) DeleteBatchURLs(ctx context.Context, user string, shorts []string) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	query := `UPDATE urls SET deleted = true WHERE userID = $1 AND short = ANY $2);`
+	_, err := pgStorage.db.ExecContext(ctx, query, user, shorts)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (pgStorage *pgStorage) SetURL(ctx context.Context, user, short, long string) error {
