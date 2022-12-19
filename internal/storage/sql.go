@@ -158,7 +158,9 @@ func (pgStorage *pgStorage) GetURL(ctx context.Context, short string) (string, b
 	row := pgStorage.db.QueryRowContext(ctx, sql, short)
 	var long string
 	var deleted bool
-	row.Scan(&long, &deleted)
+
+	err := row.Scan(&long, &deleted)
+	log.Println(err)
 	return long, deleted
 }
 
