@@ -25,7 +25,7 @@ func New(cfg config.Config) (*App, error) {
 
 	var storager interface {
 		SetURL(ctx context.Context, user, short, long string) error
-		GetURL(ctx context.Context, short string) string
+		GetURL(ctx context.Context, short string) (string, bool)
 		GetURLsByUser(ctx context.Context, user string) (urls map[string]string)
 		SetBatchURLs(ctx context.Context, urls []domain.URL) error
 		DeleteURLs(ctx context.Context, user string, shorts []string)

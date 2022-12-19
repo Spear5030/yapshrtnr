@@ -29,7 +29,7 @@ type Handler struct {
 
 type storage interface {
 	SetURL(ctx context.Context, user, short, long string) error
-	GetURL(ctx context.Context, short string) string
+	GetURL(ctx context.Context, short string) (string, bool)
 	GetURLsByUser(ctx context.Context, user string) (urls map[string]string)
 	SetBatchURLs(ctx context.Context, urls []domain.URL) error
 	DeleteURLs(ctx context.Context, user string, shorts []string)
@@ -108,10 +108,14 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 	short := strings.TrimLeft(r.URL.Path, "/")
-	v := h.Storage.GetURL(r.Context(), short)
+	v, deleted := h.Storage.GetURL(r.Context(), short)
+	if deleted == true {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
 	if len(v) > 0 {
 		w.Header().Set("Location", v)
-		w.WriteHeader(307)
+		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
 	}
 	http.Error(w, "Wrong ID", http.StatusBadRequest)

@@ -75,11 +75,11 @@ func (mStorage *storage) SetURL(ctx context.Context, user, short, long string) e
 	return nil
 }
 
-func (mStorage *storage) GetURL(ctx context.Context, short string) string {
+func (mStorage *storage) GetURL(ctx context.Context, short string) (string, bool) {
 	if v, ok := mStorage.URLs[short]; ok {
-		return v
+		return v, false
 	}
-	return ""
+	return "", false
 }
 
 func (mStorage *storage) GetURLsByUser(ctx context.Context, user string) (urls map[string]string) {
@@ -132,11 +132,11 @@ func (fStorage *fileStorage) GetURLsByUser(ctx context.Context, user string) (ur
 	return
 }
 
-func (fStorage *fileStorage) GetURL(ctx context.Context, short string) string {
+func (fStorage *fileStorage) GetURL(ctx context.Context, short string) (string, bool) {
 	if v, ok := fStorage.URLs[short]; ok {
-		return v
+		return v, false
 	}
-	return ""
+	return "", false
 }
 
 func (mStorage *storage) Ping() error {

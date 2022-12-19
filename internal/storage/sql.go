@@ -150,15 +150,16 @@ func (pgStorage *pgStorage) SetURL(ctx context.Context, user, short, long string
 	return nil
 }
 
-func (pgStorage *pgStorage) GetURL(ctx context.Context, short string) string {
+func (pgStorage *pgStorage) GetURL(ctx context.Context, short string) (string, bool) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	sql := `SELECT long FROM urls WHERE short=$1;`
+	sql := `SELECT long, deleted FROM urls WHERE short=$1;`
 	row := pgStorage.db.QueryRowContext(ctx, sql, short)
 	var long string
-	row.Scan(&long)
-	return long
+	var deleted bool
+	row.Scan(&long, &deleted)
+	return long, deleted
 }
 
 func (pgStorage *pgStorage) GetURLsByUser(ctx context.Context, user string) (urls map[string]string) {
