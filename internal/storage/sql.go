@@ -68,7 +68,7 @@ func NewPGXStorage(dsn string) (*pgStorage, error) {
 	}
 	pgS := pgStorage{
 		db:         db,
-		chanForDel: make(chan urlsForDelete),
+		chanForDel: make(chan urlsForDelete, 5),
 		deleteWork: make(chan bool),
 	}
 	go pgS.WorkWithDeleteBatch()
@@ -103,7 +103,7 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch() {
 		case <-pgStorage.deleteWork:
 			log.Println(urlsByUser)
 			if len(urlsByUser) == 0 {
-				return
+				break
 			}
 			for user, shorts := range urlsByUser {
 				err := pgStorage.DeleteBatchURLs(ctxByUser[user], user, shorts)
