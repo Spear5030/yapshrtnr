@@ -181,7 +181,6 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	h.logger.Debug(string(resJSON))
 	w.WriteHeader(http.StatusCreated)
 	w.Write(resJSON)
 }

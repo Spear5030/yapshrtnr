@@ -25,4 +25,5 @@ func (h *Handler) DeleteBatchByUser(w http.ResponseWriter, r *http.Request) {
 	user := cookie.Value
 	h.Storage.DeleteURLs(r.Context(), user, shorts)
 	w.WriteHeader(http.StatusAccepted)
+	return
 }
