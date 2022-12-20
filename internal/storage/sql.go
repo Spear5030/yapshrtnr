@@ -107,7 +107,7 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch() {
 			}
 			for user, shorts := range urlsByUser {
 				log.Println(user, " deleted ", shorts)
-				err := pgStorage.DeleteBatchURLs(user, shorts)
+				err := pgStorage.DeleteBatchURLs(ctxByUser[user], user, shorts)
 				if err != nil {
 					log.Println(err)
 				}
@@ -117,7 +117,8 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch() {
 	}
 }
 
-func (pgStorage *pgStorage) DeleteBatchURLs(user string, shorts []string) error {
+func (pgStorage *pgStorage) DeleteBatchURLs(ctx context.Context, user string, shorts []string) error {
+	//ctx из запроса почему-то сразу cancelится.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `UPDATE urls SET deleted = true WHERE 
