@@ -23,8 +23,8 @@ func (h *Handler) DeleteBatchByUser(w http.ResponseWriter, r *http.Request) {
 		if err = json.Unmarshal(b, &shorts); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
-		user := cookie.Value
-		h.Storage.DeleteURLs(r.Context(), user, shorts)
+		_ = cookie.Value
+		//h.Storage.DeleteURLs(r.Context(), user, shorts)
 		w.WriteHeader(http.StatusAccepted)
 	}
 	w.WriteHeader(http.StatusBadRequest)
