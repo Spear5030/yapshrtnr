@@ -123,10 +123,12 @@ func (pgStorage *pgStorage) DeleteBatchURLs(ctx context.Context, user string, sh
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	log.Println("DeleteBatch", shorts)
 	query := `UPDATE urls SET deleted = true WHERE 
                                    userID = $1 AND short = any ($2);`
 	_, err := pgStorage.db.ExecContext(ctx, query, user, shorts)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	return nil
