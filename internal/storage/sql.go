@@ -106,13 +106,14 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch() {
 				return
 			}
 			for user, shorts := range urlsByUser {
-				log.Println(user, " deleted ", shorts)
 				err := pgStorage.DeleteBatchURLs(ctxByUser[user], user, shorts)
 				if err != nil {
 					log.Println(err)
 				}
+				log.Println(user, " deleted ", shorts)
 			}
 			urlsByUser = make(map[string][]string)
+			return
 		}
 	}
 }
