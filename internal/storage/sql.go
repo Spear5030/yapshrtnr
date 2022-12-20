@@ -84,7 +84,7 @@ func (pgStorage *pgStorage) Ping() error {
 }
 
 func (pgStorage *pgStorage) DeleteURLs(ctx context.Context, user string, shorts []string) {
-	time.AfterFunc(10*time.Millisecond, func() {
+	time.AfterFunc(5*time.Second, func() {
 		pgStorage.deleteWork <- true
 	})
 	chunk := urlsForDelete{user, shorts, ctx}
@@ -119,8 +119,9 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch() {
 
 func (pgStorage *pgStorage) DeleteBatchURLs(ctx context.Context, user string, shorts []string) error {
 	//ctx из запроса почему-то сразу cancelится.
-	//var cancel context.CancelFunc
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	_ = ctx
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	query := `UPDATE urls SET deleted = true WHERE 
                                    userID = $1 AND short = any ($2);`
