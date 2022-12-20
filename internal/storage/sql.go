@@ -112,7 +112,6 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch() {
 				}
 				log.Println(user, " deleted ", shorts)
 			}
-			urlsByUser = make(map[string][]string)
 			return
 		}
 	}
