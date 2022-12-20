@@ -119,9 +119,8 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch() {
 
 func (pgStorage *pgStorage) DeleteBatchURLs(ctx context.Context, user string, shorts []string) error {
 	//ctx из запроса почему-то сразу cancelится.
-	ctx = nil
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	//var cancel context.CancelFunc
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	query := `UPDATE urls SET deleted = true WHERE 
                                    userID = $1 AND short = any ($2);`
