@@ -17,12 +17,15 @@ func (h *Handler) DeleteBatchByUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
-	var shorts []string
-	if err = json.Unmarshal(b, &shorts); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	h.logger.Debug(string(b))
+	if len(b) > 0 {
+		var shorts []string
+		if err = json.Unmarshal(b, &shorts); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+		user := cookie.Value
+		h.Storage.DeleteURLs(r.Context(), user, shorts)
+		w.WriteHeader(http.StatusAccepted)
 	}
-	user := cookie.Value
-	h.Storage.DeleteURLs(r.Context(), user, shorts)
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusBadRequest)
 }
