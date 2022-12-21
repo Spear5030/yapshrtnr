@@ -67,7 +67,7 @@ func NewPGXStorage(dsn string) (*pgStorage, error) {
 	}
 	pgS := pgStorage{
 		db:         db,
-		chanForDel: make(chan urlsForDelete),
+		chanForDel: make(chan urlsForDelete, 10),
 		deleteWork: make(chan bool),
 	}
 	go pgS.WorkWithDeleteBatch()
