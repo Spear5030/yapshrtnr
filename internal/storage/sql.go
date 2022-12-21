@@ -83,10 +83,9 @@ func (pgStorage *pgStorage) Ping() error {
 }
 
 func (pgStorage *pgStorage) DeleteURLs(ctx context.Context, user string, shorts []string) {
-	time.AfterFunc(50*time.Millisecond, func() {
+	time.AfterFunc(500*time.Millisecond, func() {
 		pgStorage.deleteWork <- true
 	})
-	log.Println(shorts)
 	chunk := urlsForDelete{user, shorts}
 	pgStorage.chanForDel <- chunk
 }
@@ -96,19 +95,13 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch() {
 	for {
 		select {
 		case x := <-pgStorage.chanForDel:
-			log.Println(x.user, " will delete ", x.shorts)
 			urlsByUser[x.user] = append(urlsByUser[x.user], x.shorts...)
 		case <-pgStorage.deleteWork:
-			log.Println(urlsByUser)
-			if len(urlsByUser) == 0 {
-				log.Println("Zero len urls")
-			}
 			for user, shorts := range urlsByUser {
 				err := pgStorage.DeleteBatchURLs(user, shorts)
 				if err != nil {
 					log.Println(err)
 				}
-				log.Println(user, " deleted ", shorts)
 			}
 			urlsByUser = make(map[string][]string)
 		}
@@ -118,7 +111,6 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch() {
 func (pgStorage *pgStorage) DeleteBatchURLs(user string, shorts []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	log.Println("DeleteBatch", shorts)
 	query := `UPDATE urls SET deleted = true WHERE 
                                    userID = $1 AND short = any ($2);`
 	_, err := pgStorage.db.ExecContext(ctx, query, user, shorts)

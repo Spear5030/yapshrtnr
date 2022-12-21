@@ -163,7 +163,11 @@ func (fStorage *fileStorage) SetBatchURLs(ctx context.Context, urls []domain.URL
 
 func (mStorage *storage) DeleteURLs(ctx context.Context, user string, shorts []string) {
 	for _, short := range shorts {
-		mStorage.Deleted[short] = user
+		for _, s := range mStorage.Users[user] {
+			if s == short {
+				mStorage.Deleted[short] = user
+			}
+		}
 	}
 }
 
