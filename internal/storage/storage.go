@@ -18,8 +18,9 @@ type link struct {
 }
 
 type storage struct {
-	URLs  map[string]string
-	Users map[string][]string
+	URLs    map[string]string
+	Users   map[string][]string
+	Deleted map[string]string
 }
 
 type fileStorage struct {
@@ -31,6 +32,7 @@ func NewMemoryStorage() *storage {
 	return &storage{
 		make(map[string]string),
 		make(map[string][]string),
+		make(map[string]string),
 	}
 }
 
@@ -76,6 +78,10 @@ func (mStorage *storage) SetURL(ctx context.Context, user, short, long string) e
 }
 
 func (mStorage *storage) GetURL(ctx context.Context, short string) (string, bool) {
+	if _, ok := mStorage.Deleted[short]; ok {
+		return "", true
+	}
+
 	if v, ok := mStorage.URLs[short]; ok {
 		return v, false
 	}
@@ -144,6 +150,10 @@ func (mStorage *storage) Ping() error {
 }
 
 func (mStorage *storage) SetBatchURLs(ctx context.Context, urls []domain.URL) error {
+	for _, u := range urls {
+		mStorage.URLs[u.Short] = u.Long
+		mStorage.Users[u.User] = append(mStorage.Users[u.User], u.Short)
+	}
 	return nil
 }
 
@@ -152,7 +162,9 @@ func (fStorage *fileStorage) SetBatchURLs(ctx context.Context, urls []domain.URL
 }
 
 func (mStorage *storage) DeleteURLs(ctx context.Context, user string, shorts []string) {
-
+	for _, short := range shorts {
+		mStorage.Deleted[short] = user
+	}
 }
 
 func (fStorage *fileStorage) DeleteURLs(ctx context.Context, user string, shorts []string) {
