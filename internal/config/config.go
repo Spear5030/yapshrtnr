@@ -9,9 +9,8 @@ type Config struct {
 	Addr        string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
 	BaseURL     string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	FileStorage string `env:"FILE_STORAGE_PATH"`
-	//Database    string `env:"DATABASE_DSN"`
-	Database string `env:"DATABASE_DSN" envDefault:"host=localhost port=5432 user=postgres password=031995"`
-	Key      string `env:"COOKIES_KEY" envDefault:"V3ry$trongK3y"`
+	Database    string `env:"DATABASE_DSN"`
+	Key         string `env:"COOKIES_KEY" envDefault:"V3ry$trongK3y"`
 }
 
 var cfg Config
