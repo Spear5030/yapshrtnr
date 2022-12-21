@@ -67,7 +67,7 @@ func NewPGXStorage(dsn string) (*pgStorage, error) {
 	}
 	pgS := pgStorage{
 		db:         db,
-		chanForDel: make(chan urlsForDelete, 10),
+		chanForDel: make(chan urlsForDelete),
 		deleteWork: make(chan bool),
 	}
 	go pgS.WorkWithDeleteBatch()
@@ -83,7 +83,7 @@ func (pgStorage *pgStorage) Ping() error {
 }
 
 func (pgStorage *pgStorage) DeleteURLs(ctx context.Context, user string, shorts []string) {
-	time.AfterFunc(0, func() {
+	time.AfterFunc(50*time.Millisecond, func() {
 		pgStorage.deleteWork <- true
 	})
 	log.Println(shorts)
@@ -101,7 +101,7 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch() {
 		case <-pgStorage.deleteWork:
 			log.Println(urlsByUser)
 			if len(urlsByUser) == 0 {
-				break
+				log.Println("Zero len urls")
 			}
 			for user, shorts := range urlsByUser {
 				err := pgStorage.DeleteBatchURLs(user, shorts)
@@ -110,7 +110,7 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch() {
 				}
 				log.Println(user, " deleted ", shorts)
 			}
-			return
+			urlsByUser = make(map[string][]string)
 		}
 	}
 }
