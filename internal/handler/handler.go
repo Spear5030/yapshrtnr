@@ -12,24 +12,26 @@ import (
 	"github.com/Spear5030/yapshrtnr/internal/domain"
 	"github.com/Spear5030/yapshrtnr/internal/module"
 	pckgstorage "github.com/Spear5030/yapshrtnr/internal/storage"
+	"go.uber.org/zap"
 	"io"
 	"math/rand"
 	"net/http"
 	"strings"
-	"time"
 )
 
 type Handler struct {
 	Storage   storage
+	logger    *zap.Logger
 	BaseURL   string
 	SecretKey string
 }
 
 type storage interface {
 	SetURL(ctx context.Context, user, short, long string) error
-	GetURL(ctx context.Context, short string) string
+	GetURL(ctx context.Context, short string) (string, bool)
 	GetURLsByUser(ctx context.Context, user string) (urls map[string]string)
 	SetBatchURLs(ctx context.Context, urls []domain.URL) error
+	DeleteURLs(ctx context.Context, user string, shorts []string)
 }
 
 type link struct {
@@ -61,8 +63,9 @@ type batchResult struct {
 	CorrelationID string `json:"correlation_id"`
 }
 
-func New(storage storage, baseURL string, key string) *Handler {
+func New(logger *zap.Logger, storage storage, baseURL string, key string) *Handler {
 	return &Handler{
+		logger:    logger,
 		Storage:   storage,
 		BaseURL:   baseURL,
 		SecretKey: key,
@@ -104,10 +107,14 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 	short := strings.TrimLeft(r.URL.Path, "/")
-	v := h.Storage.GetURL(r.Context(), short)
+	v, deleted := h.Storage.GetURL(r.Context(), short)
+	if deleted {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
 	if len(v) > 0 {
 		w.Header().Set("Location", v)
-		w.WriteHeader(307)
+		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
 	}
 	http.Error(w, "Wrong ID", http.StatusBadRequest)
@@ -123,7 +130,6 @@ func (h *Handler) PingDB(w http.ResponseWriter, r *http.Request) {
 	}
 	//log.Fatal("Storage haven't pinger")
 	w.WriteHeader(http.StatusInternalServerError)
-
 }
 
 func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
@@ -160,11 +166,9 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 			Long:  url.Long,
 		})
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), time.Minute)
-	defer cancel()
 
 	result := make([]batchResult, len(inputs))
-	if h.Storage.SetBatchURLs(ctx, urls) != nil {
+	if h.Storage.SetBatchURLs(r.Context(), urls) != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	for i, urlEnt := range tmps {

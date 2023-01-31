@@ -11,12 +11,18 @@ import (
 	"log"
 	"time"
 
-	//_ "github.com/jackc/pgx"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type pgStorage struct {
-	db *sql.DB
+	db         *sql.DB
+	chanForDel chan urlsForDelete
+	deleteWork chan bool
+}
+
+type urlsForDelete struct {
+	user   string
+	shorts []string
 }
 
 type URL struct {
@@ -51,13 +57,21 @@ func NewDuplicationError(dup string, err error) error {
 func NewPGXStorage(dsn string) (*pgStorage, error) {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	err = db.Ping()
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
-	return &pgStorage{db: db}, nil
+	pgS := pgStorage{
+		db:         db,
+		chanForDel: make(chan urlsForDelete), //канал, в который отправляются задачи(пользователь, слайс URL)
+		deleteWork: make(chan bool),          //канал по которому стартуем саму операцию удаления()
+	}
+	go pgS.WorkWithDeleteBatch(context.Background()) // функция с циклом for-select - ожидает значения в каналах chanForDel и deleteWork
+	return &pgS, nil
 }
 
 func (pgStorage *pgStorage) Ping() error {
@@ -66,6 +80,47 @@ func (pgStorage *pgStorage) Ping() error {
 		panic(err)
 	}
 	return err
+}
+
+func (pgStorage *pgStorage) DeleteURLs(ctx context.Context, user string, shorts []string) {
+	time.AfterFunc(500*time.Millisecond, func() {
+		pgStorage.deleteWork <- true
+	})
+	chunk := urlsForDelete{user, shorts}
+	pgStorage.chanForDel <- chunk
+}
+
+func (pgStorage *pgStorage) WorkWithDeleteBatch(ctx context.Context) {
+	urlsByUser := make(map[string][]string)
+	for {
+		select {
+		case <-ctx.Done():
+			log.Println("Context done")
+		case x := <-pgStorage.chanForDel:
+			urlsByUser[x.user] = append(urlsByUser[x.user], x.shorts...)
+		case <-pgStorage.deleteWork:
+			for user, shorts := range urlsByUser {
+				err := pgStorage.DeleteBatchURLs(user, shorts)
+				if err != nil {
+					log.Println(err)
+				}
+			}
+			urlsByUser = make(map[string][]string)
+		}
+	}
+}
+
+func (pgStorage *pgStorage) DeleteBatchURLs(user string, shorts []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `UPDATE urls SET deleted = true WHERE 
+                                   userID = $1 AND short = any ($2);`
+	_, err := pgStorage.db.ExecContext(ctx, query, user, shorts)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
 }
 
 func (pgStorage *pgStorage) SetURL(ctx context.Context, user, short, long string) error {
@@ -92,15 +147,20 @@ func (pgStorage *pgStorage) SetURL(ctx context.Context, user, short, long string
 	return nil
 }
 
-func (pgStorage *pgStorage) GetURL(ctx context.Context, short string) string {
+func (pgStorage *pgStorage) GetURL(ctx context.Context, short string) (string, bool) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	sql := `SELECT long FROM urls WHERE short=$1;`
+	sql := `SELECT long, deleted FROM urls WHERE short=$1;`
 	row := pgStorage.db.QueryRowContext(ctx, sql, short)
 	var long string
-	row.Scan(&long)
-	return long
+	var deleted bool
+
+	err := row.Scan(&long, &deleted)
+	if err != nil {
+		log.Println(err)
+	}
+	return long, deleted
 }
 
 func (pgStorage *pgStorage) GetURLsByUser(ctx context.Context, user string) (urls map[string]string) {
@@ -108,6 +168,9 @@ func (pgStorage *pgStorage) GetURLsByUser(ctx context.Context, user string) (url
 }
 
 func (pgStorage *pgStorage) SetBatchURLs(ctx context.Context, urls []domain.URL) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	tx, err := pgStorage.db.Begin()
 	if err != nil {
 		return err

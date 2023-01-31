@@ -8,6 +8,7 @@ import (
 	"github.com/Spear5030/yapshrtnr/internal/config"
 	"github.com/Spear5030/yapshrtnr/internal/handler"
 	testStorage "github.com/Spear5030/yapshrtnr/internal/storage"
+	"github.com/Spear5030/yapshrtnr/pkg/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -28,14 +29,15 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path, body string) (
 	require.NoError(t, err)
 
 	defer resp.Body.Close()
-	//resp.Header.Get("Content-Type")
+
 	return resp.StatusCode, string(respBody)
 }
 
 func TestRouter(t *testing.T) {
 	cfg, err := config.New()
 	require.NoError(t, err)
-	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
+	lg, _ := logger.New(true)
+	h := handler.New(lg, testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -59,7 +61,8 @@ func TestRouter(t *testing.T) {
 func TestGZRequest(t *testing.T) {
 	cfg, err := config.New()
 	require.NoError(t, err)
-	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
+	lg, _ := logger.New(true)
+	h := handler.New(lg, testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -84,7 +87,8 @@ func TestGZRequest(t *testing.T) {
 func TestJSON(t *testing.T) {
 	cfg, err := config.New()
 	require.NoError(t, err)
-	h := handler.New(testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
+	lg, _ := logger.New(true)
+	h := handler.New(lg, testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
