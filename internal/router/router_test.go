@@ -29,7 +29,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path, body string) (
 	require.NoError(t, err)
 
 	defer resp.Body.Close()
-	//resp.Header.Get("Content-Type")
+
 	return resp.StatusCode, string(respBody)
 }
 

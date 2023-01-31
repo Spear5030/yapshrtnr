@@ -67,10 +67,10 @@ func NewPGXStorage(dsn string) (*pgStorage, error) {
 	}
 	pgS := pgStorage{
 		db:         db,
-		chanForDel: make(chan urlsForDelete),
-		deleteWork: make(chan bool),
+		chanForDel: make(chan urlsForDelete), //канал, в который отправляются задачи(пользователь, слайс URL)
+		deleteWork: make(chan bool),          //канал по которому стартуем саму операцию удаления()
 	}
-	go pgS.WorkWithDeleteBatch()
+	go pgS.WorkWithDeleteBatch(context.Background()) // функция с циклом for-select - ожидает значения в каналах chanForDel и deleteWork
 	return &pgS, nil
 }
 
@@ -90,10 +90,12 @@ func (pgStorage *pgStorage) DeleteURLs(ctx context.Context, user string, shorts 
 	pgStorage.chanForDel <- chunk
 }
 
-func (pgStorage *pgStorage) WorkWithDeleteBatch() {
+func (pgStorage *pgStorage) WorkWithDeleteBatch(ctx context.Context) {
 	urlsByUser := make(map[string][]string)
 	for {
 		select {
+		case <-ctx.Done():
+			log.Println("Context done")
 		case x := <-pgStorage.chanForDel:
 			urlsByUser[x.user] = append(urlsByUser[x.user], x.shorts...)
 		case <-pgStorage.deleteWork:
