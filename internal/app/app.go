@@ -35,7 +35,7 @@ func New(cfg config.Config) (*App, error) {
 		//		Ping() error
 	}
 
-	fmem, err := os.Create(`profiles/base.pprof`)
+	fmem, err := os.Create(`base.pprof`)
 	if err != nil {
 		panic(err)
 	}
