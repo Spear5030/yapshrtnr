@@ -13,6 +13,9 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
+	"runtime"
+	"runtime/pprof"
 	"time"
 )
 
@@ -30,6 +33,16 @@ func New(cfg config.Config) (*App, error) {
 		SetBatchURLs(ctx context.Context, urls []domain.URL) error
 		DeleteURLs(ctx context.Context, user string, shorts []string)
 		//		Ping() error
+	}
+
+	fmem, err := os.Create(`profiles/base.pprof`)
+	if err != nil {
+		panic(err)
+	}
+	defer fmem.Close()
+	runtime.GC() // получаем статистику по использованию памяти
+	if err := pprof.WriteHeapProfile(fmem); err != nil {
+		panic(err)
 	}
 
 	lg, err := logger.New(true)
