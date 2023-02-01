@@ -13,6 +13,7 @@ func New(h *handler.Handler) http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Compress(5))
 	r.Use(handler.DecompressGZRequest)
+	r.Mount("/debug", middleware.Profiler())
 	r.Get("/{id}", h.GetURL)
 	r.Get("/ping", h.PingDB)
 	r.Post("/", h.PostURL)

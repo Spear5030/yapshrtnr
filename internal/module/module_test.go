@@ -40,3 +40,9 @@ func Test_shortingURL(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkShortingURL(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		ShortingURL("https://asdawasda.ee")
+	}
+}
