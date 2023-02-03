@@ -2,8 +2,9 @@ package module
 
 import (
 	"errors"
-	"github.com/asaskevich/govalidator"
 	"math/rand"
+
+	"github.com/asaskevich/govalidator"
 )
 
 var errURLshorting = errors.New("handler: wrong URL")

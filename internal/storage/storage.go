@@ -6,9 +6,10 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
-	"github.com/Spear5030/yapshrtnr/internal/domain"
 	"io"
 	"os"
+
+	"github.com/Spear5030/yapshrtnr/internal/domain"
 )
 
 type link struct {

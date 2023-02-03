@@ -1,10 +1,12 @@
 package router
 
 import (
-	"github.com/Spear5030/yapshrtnr/internal/handler"
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"net/http"
+
+	"github.com/Spear5030/yapshrtnr/internal/handler"
 )
 
 func New(h *handler.Handler) http.Handler {

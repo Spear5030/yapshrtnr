@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/Spear5030/yapshrtnr/internal/domain"
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
 	"log"
 	"time"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
+
+	"github.com/Spear5030/yapshrtnr/internal/domain"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )

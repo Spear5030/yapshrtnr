@@ -2,6 +2,13 @@ package app
 
 import (
 	"context"
+	"log"
+	"math/rand"
+	"net/http"
+	"time"
+
+	"go.uber.org/zap"
+
 	"github.com/Spear5030/yapshrtnr/db/migrate"
 	"github.com/Spear5030/yapshrtnr/internal/config"
 	"github.com/Spear5030/yapshrtnr/internal/domain"
@@ -9,11 +16,6 @@ import (
 	"github.com/Spear5030/yapshrtnr/internal/router"
 	"github.com/Spear5030/yapshrtnr/internal/storage"
 	"github.com/Spear5030/yapshrtnr/pkg/logger"
-	"go.uber.org/zap"
-	"log"
-	"math/rand"
-	"net/http"
-	"time"
 )
 
 type App struct {

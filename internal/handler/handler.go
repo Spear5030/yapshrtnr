@@ -9,14 +9,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Spear5030/yapshrtnr/internal/domain"
-	"github.com/Spear5030/yapshrtnr/internal/module"
-	pckgstorage "github.com/Spear5030/yapshrtnr/internal/storage"
-	"go.uber.org/zap"
 	"io"
 	"math/rand"
 	"net/http"
 	"strings"
+
+	"go.uber.org/zap"
+
+	"github.com/Spear5030/yapshrtnr/internal/domain"
+	"github.com/Spear5030/yapshrtnr/internal/module"
+	pckgstorage "github.com/Spear5030/yapshrtnr/internal/storage"
 )
 
 type Handler struct {
