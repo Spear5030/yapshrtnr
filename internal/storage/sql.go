@@ -84,6 +84,7 @@ func (pgStorage *pgStorage) Ping() error {
 	return err
 }
 
+// DeleteURLs отправляет в канал список удаляемых URL. Через 500мс через канал deleteWork выполняет отложенный запуск
 func (pgStorage *pgStorage) DeleteURLs(ctx context.Context, user string, shorts []string) {
 	time.AfterFunc(500*time.Millisecond, func() {
 		pgStorage.deleteWork <- true
@@ -92,6 +93,7 @@ func (pgStorage *pgStorage) DeleteURLs(ctx context.Context, user string, shorts 
 	pgStorage.chanForDel <- chunk
 }
 
+// WorkWithDeleteBatch Сбор URL из канала chanForDel. По каналу deleteWork удаление в хранилище
 func (pgStorage *pgStorage) WorkWithDeleteBatch(ctx context.Context) {
 	urlsByUser := make(map[string][]string)
 	for {
@@ -112,6 +114,7 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch(ctx context.Context) {
 	}
 }
 
+// DeleteBatchURLs Пакетное удаление массива URL
 func (pgStorage *pgStorage) DeleteBatchURLs(user string, shorts []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -125,6 +128,7 @@ func (pgStorage *pgStorage) DeleteBatchURLs(user string, shorts []string) error 
 	return nil
 }
 
+// SetURL запись URL в PostgeSQL
 func (pgStorage *pgStorage) SetURL(ctx context.Context, user, short, long string) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -149,6 +153,7 @@ func (pgStorage *pgStorage) SetURL(ctx context.Context, user, short, long string
 	return nil
 }
 
+// GetURL Получение оригинального URL по короткой записи. Возвращает вторым аргументом bool - удален ли URL
 func (pgStorage *pgStorage) GetURL(ctx context.Context, short string) (string, bool) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -169,6 +174,7 @@ func (pgStorage *pgStorage) GetURLsByUser(ctx context.Context, user string) (url
 	return nil
 }
 
+// SetBatchURLs Пакетная запись URL в PostgreSQL
 func (pgStorage *pgStorage) SetBatchURLs(ctx context.Context, urls []domain.URL) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()

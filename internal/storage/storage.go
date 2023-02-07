@@ -1,3 +1,4 @@
+// Пакет storage реализует слой хранения
 package storage
 
 import (
@@ -72,12 +73,14 @@ func NewFileStorage(filename string) (*fileStorage, error) {
 	}, nil
 }
 
+// SetURL записывает связь short и long в map памяти.
 func (mStorage *storage) SetURL(ctx context.Context, user, short, long string) error {
 	mStorage.URLs[short] = long
 	mStorage.Users[user] = append(mStorage.Users[user], short)
 	return nil
 }
 
+// GetURL возвращает полный URL из хранилища памяти.
 func (mStorage *storage) GetURL(ctx context.Context, short string) (string, bool) {
 	if _, ok := mStorage.Deleted[short]; ok {
 		return "", true
@@ -89,16 +92,13 @@ func (mStorage *storage) GetURL(ctx context.Context, short string) (string, bool
 	return "", false
 }
 
+// GetURL возвращает список URL созданных определенным пользователем из хранилища памяти.
 func (mStorage *storage) GetURLsByUser(ctx context.Context, user string) (urls map[string]string) {
 	urls = make(map[string]string)
 	if shorts, ok := mStorage.Users[user]; ok {
 		for _, short := range shorts {
 			urls[short] = mStorage.URLs[short]
 		}
-		//url := link{}
-		//url.Short = short
-		//url.Long = mStorage.URLs[short]
-		//result = append(result, url)
 	}
 	return
 }
@@ -130,10 +130,6 @@ func (fStorage *fileStorage) GetURLsByUser(ctx context.Context, user string) (ur
 
 		for _, short := range shorts {
 			urls[short] = fStorage.URLs[short]
-			//url := link{}
-			//url.Short = short
-			//url.Long = fStorage.URLs[short]
-			//result = append(result, url)
 		}
 	}
 	return

@@ -1,3 +1,4 @@
+// Пакет module содержит вспомогательные функции
 package module
 
 import (
@@ -9,6 +10,7 @@ import (
 
 var errURLshorting = errors.New("handler: wrong URL")
 
+// ShortingURL Сокращение и валидация URL.
 func ShortingURL(longURL string) (string, error) {
 	b := make([]byte, 8)
 	if !govalidator.IsURL(longURL) {
