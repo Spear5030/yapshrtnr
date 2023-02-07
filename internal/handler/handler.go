@@ -22,6 +22,7 @@ import (
 	pckgstorage "github.com/Spear5030/yapshrtnr/internal/storage"
 )
 
+// Handler основная структура обработчика. Storage - интерфейс.
 type Handler struct {
 	Storage   storage
 	logger    *zap.Logger

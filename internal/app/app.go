@@ -19,6 +19,7 @@ import (
 	"github.com/Spear5030/yapshrtnr/pkg/logger"
 )
 
+// App основная структура приложения. HTTP сервер и логгер
 type App struct {
 	HTTPServer *http.Server
 	logger     *zap.Logger
@@ -71,6 +72,7 @@ func New(cfg config.Config) (*App, error) {
 	}, nil
 }
 
+// Run запуск приложения.
 func (app *App) Run() error {
 	rand.Seed(time.Now().UnixNano())
 	return app.HTTPServer.ListenAndServe()

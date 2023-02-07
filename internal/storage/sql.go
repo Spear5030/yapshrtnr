@@ -32,6 +32,8 @@ type URL struct {
 	domain.URL
 	CorrelationID string `db:"correlation_id"`
 }
+
+// ResultBatch результирующая структура с CorrelationID для связи с коротким URL
 type ResultBatch struct {
 	long          string
 	correlationID string

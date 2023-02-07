@@ -10,6 +10,7 @@ import (
 	"github.com/Spear5030/yapshrtnr/internal/handler"
 )
 
+// New возвращает роутер с группами нужных эндпоинтов.
 func New(h *handler.Handler) http.Handler {
 	r := chi.NewRouter()
 	r.Use(handler.CheckCookies(h.SecretKey))
