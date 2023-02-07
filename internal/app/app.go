@@ -25,6 +25,7 @@ type App struct {
 	logger     *zap.Logger
 }
 
+// New возвращает App
 func New(cfg config.Config) (*App, error) {
 
 	var storager interface {

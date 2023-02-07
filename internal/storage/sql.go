@@ -39,6 +39,7 @@ type ResultBatch struct {
 	correlationID string
 }
 
+// DuplicationError ошибка при конфликте уже сохраненного URL. содержит в себе сокращенный ранее идентификатор
 type DuplicationError struct {
 	Duplication string
 	Err         error
@@ -48,10 +49,12 @@ func (derr *DuplicationError) Error() string {
 	return fmt.Sprintf("%v", derr.Err)
 }
 
+// Pinger интерфейс для БД
 type Pinger interface {
 	Ping() error
 }
 
+// NewDuplicationError возвращает ошибку DuplicationError
 func NewDuplicationError(dup string, err error) error {
 	return &DuplicationError{
 		Duplication: dup,
@@ -59,6 +62,7 @@ func NewDuplicationError(dup string, err error) error {
 	}
 }
 
+// NewPGXStorage возвращает хранилище PostrgeSQL. Запускает горутину-воркер для удаления
 func NewPGXStorage(dsn string) (*pgStorage, error) {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
@@ -79,6 +83,7 @@ func NewPGXStorage(dsn string) (*pgStorage, error) {
 	return &pgS, nil
 }
 
+// Ping реализует интерфейс Pinger
 func (pgStorage *pgStorage) Ping() error {
 	err := pgStorage.db.Ping()
 	if err != nil {
@@ -173,6 +178,7 @@ func (pgStorage *pgStorage) GetURL(ctx context.Context, short string) (string, b
 	return long, deleted
 }
 
+// GetURLsByUser не имплементировано на БД
 func (pgStorage *pgStorage) GetURLsByUser(ctx context.Context, user string) (urls map[string]string) {
 	return nil
 }

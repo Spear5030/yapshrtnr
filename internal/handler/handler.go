@@ -67,6 +67,7 @@ type batchResult struct {
 	CorrelationID string `json:"correlation_id"`
 }
 
+// New возвращает Handler
 func New(logger *zap.Logger, storage storage, baseURL string, key string) *Handler {
 	return &Handler{
 		logger:    logger,

@@ -30,6 +30,7 @@ type fileStorage struct {
 	storage
 }
 
+// NewMemoryStorage возвращает хранилище в памяти
 func NewMemoryStorage() *storage {
 	return &storage{
 		make(map[string]string),
@@ -38,6 +39,7 @@ func NewMemoryStorage() *storage {
 	}
 }
 
+// NewFileStorage возвращает файловое хранилище
 func NewFileStorage(filename string) (*fileStorage, error) {
 	file, err := os.OpenFile(filename, os.O_RDONLY|os.O_APPEND|os.O_CREATE, 0777)
 	if err != nil {
@@ -92,7 +94,7 @@ func (mStorage *storage) GetURL(ctx context.Context, short string) (string, bool
 	return "", false
 }
 
-// GetURL возвращает список URL созданных определенным пользователем из хранилища памяти.
+// GetURLsByUser возвращает список URL созданных определенным пользователем из хранилища памяти.
 func (mStorage *storage) GetURLsByUser(ctx context.Context, user string) (urls map[string]string) {
 	urls = make(map[string]string)
 	if shorts, ok := mStorage.Users[user]; ok {
@@ -103,6 +105,7 @@ func (mStorage *storage) GetURLsByUser(ctx context.Context, user string) (urls m
 	return
 }
 
+// SetURL записывает связь short и long в map памяти. После сбрасывает изменения в файл
 func (fStorage *fileStorage) SetURL(ctx context.Context, user, short, long string) error {
 	fStorage.URLs[short] = long
 	fStorage.Users[user] = append(fStorage.Users[user], short)
@@ -124,6 +127,7 @@ func (fStorage *fileStorage) SetURL(ctx context.Context, user, short, long strin
 	return nil
 }
 
+// GetURLsByUser возвращает список URL созданных определенным пользователем из хранилища.
 func (fStorage *fileStorage) GetURLsByUser(ctx context.Context, user string) (urls map[string]string) {
 	urls = make(map[string]string)
 	if shorts, ok := fStorage.Users[user]; ok {
@@ -135,6 +139,7 @@ func (fStorage *fileStorage) GetURLsByUser(ctx context.Context, user string) (ur
 	return
 }
 
+// GetURL возвращает полный URL.
 func (fStorage *fileStorage) GetURL(ctx context.Context, short string) (string, bool) {
 	if v, ok := fStorage.URLs[short]; ok {
 		return v, false
@@ -142,10 +147,12 @@ func (fStorage *fileStorage) GetURL(ctx context.Context, short string) (string, 
 	return "", false
 }
 
+// Ping не имплементировано для данного хранилища
 func (mStorage *storage) Ping() error {
 	return nil
 }
 
+// SetBatchURLs пакетное сохранение ссылок в памяти
 func (mStorage *storage) SetBatchURLs(ctx context.Context, urls []domain.URL) error {
 	for _, u := range urls {
 		mStorage.URLs[u.Short] = u.Long
@@ -154,10 +161,12 @@ func (mStorage *storage) SetBatchURLs(ctx context.Context, urls []domain.URL) er
 	return nil
 }
 
+// SetBatchURLs не имплементировано для данного хранилища
 func (fStorage *fileStorage) SetBatchURLs(ctx context.Context, urls []domain.URL) error {
 	return nil
 }
 
+// DeleteURLs пакетное удаление ссылок в памяти
 func (mStorage *storage) DeleteURLs(ctx context.Context, user string, shorts []string) {
 	for _, short := range shorts {
 		for _, s := range mStorage.Users[user] {
@@ -168,6 +177,7 @@ func (mStorage *storage) DeleteURLs(ctx context.Context, user string, shorts []s
 	}
 }
 
+// DeleteURLs не имплементировано для данного хранилища
 func (fStorage *fileStorage) DeleteURLs(ctx context.Context, user string, shorts []string) {
 
 }
