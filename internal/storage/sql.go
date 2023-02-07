@@ -27,6 +27,7 @@ type urlsForDelete struct {
 	shorts []string
 }
 
+// URL структура с CorrelationID для связи списков сокращенных и полных URL при пакетной обработке
 type URL struct {
 	domain.URL
 	CorrelationID string `db:"correlation_id"`
