@@ -45,6 +45,7 @@ type DuplicationError struct {
 	Err         error
 }
 
+// Error для интерфейса Error
 func (derr *DuplicationError) Error() string {
 	return fmt.Sprintf("%v", derr.Err)
 }
