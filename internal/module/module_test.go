@@ -1,7 +1,6 @@
 package module
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/require"
 	"testing"
 
@@ -46,8 +45,4 @@ func BenchmarkShortingURL(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ShortingURL("https://asdawasda.ee")
 	}
-}
-
-func ExampleShortingURL() {
-	fmt.Println(ShortingURL("https://asdawasda.ee"))
 }
