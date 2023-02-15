@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// DeleteBatchByUser Пакетное удаление ссылок пользователя.
 func (h *Handler) DeleteBatchByUser(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("id")
 	if err != nil {

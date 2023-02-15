@@ -1,3 +1,4 @@
+// Пакет migrate отвечает за миграции.
 package migrate
 
 import (
@@ -12,6 +13,7 @@ import (
 //go:embed migrations
 var Migrations embed.FS
 
+// Migrate функция миграции
 func Migrate(dsn string, path fs.FS) error {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {

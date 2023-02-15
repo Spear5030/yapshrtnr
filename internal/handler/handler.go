@@ -1,3 +1,4 @@
+// Пакет handler обрабатывает http запросы
 package handler
 
 import (
@@ -9,16 +10,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Spear5030/yapshrtnr/internal/domain"
-	"github.com/Spear5030/yapshrtnr/internal/module"
-	pckgstorage "github.com/Spear5030/yapshrtnr/internal/storage"
-	"go.uber.org/zap"
 	"io"
 	"math/rand"
 	"net/http"
 	"strings"
+
+	"go.uber.org/zap"
+
+	"github.com/Spear5030/yapshrtnr/internal/domain"
+	"github.com/Spear5030/yapshrtnr/internal/module"
+	pckgstorage "github.com/Spear5030/yapshrtnr/internal/storage"
 )
 
+// Handler основная структура обработчика. Storage - интерфейс.
 type Handler struct {
 	Storage   storage
 	logger    *zap.Logger
@@ -63,6 +67,7 @@ type batchResult struct {
 	CorrelationID string `json:"correlation_id"`
 }
 
+// New возвращает Handler
 func New(logger *zap.Logger, storage storage, baseURL string, key string) *Handler {
 	return &Handler{
 		logger:    logger,
@@ -72,6 +77,7 @@ func New(logger *zap.Logger, storage storage, baseURL string, key string) *Handl
 	}
 }
 
+// PostURL получает URL из тела запроса для сокращения. Возвращает 201 статус, либо 409 при дублировании URL
 func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -105,6 +111,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(res))
 }
 
+// GetURL получает сокращенную ссылку из URL. Возвращает полную ссылку и Redirect
 func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 	short := strings.TrimLeft(r.URL.Path, "/")
 	v, deleted := h.Storage.GetURL(r.Context(), short)
@@ -120,6 +127,7 @@ func (h *Handler) GetURL(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Wrong ID", http.StatusBadRequest)
 }
 
+// PingDB проверяет соединение с PostgreSQL
 func (h *Handler) PingDB(w http.ResponseWriter, r *http.Request) {
 	pinger, ok := h.Storage.(pckgstorage.Pinger)
 	if ok {
@@ -132,6 +140,7 @@ func (h *Handler) PingDB(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
+// PostBatch получает список URL в JSON. Преобразует и отправляет в storage. Возвращает JSON c сокращенными URL и CorrelationID
 func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -185,6 +194,7 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	w.Write(resJSON)
 }
 
+// PostJSON получает URL в JSON. Преобразует и отправляет в storage. Возвращает JSON c сокращенным URL
 func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -227,6 +237,7 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 	w.Write(resJSON)
 }
 
+// GetURLsByUser возвращает JSON с массивом ссылок, которые созданы текущим пользователем
 func (h *Handler) GetURLsByUser(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("id")
 	if err != nil {
@@ -251,6 +262,7 @@ func (h *Handler) GetURLsByUser(w http.ResponseWriter, r *http.Request) {
 	w.Write(resJSON)
 }
 
+// DecompressGZRequest middleware для работы с gzip
 func DecompressGZRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get(`Content-Encoding`) == `gzip` {
@@ -266,8 +278,7 @@ func DecompressGZRequest(next http.Handler) http.Handler {
 	})
 }
 
-// проброс ключа в middleware подсмотрел в chi - кажется немного монстроузно, но лаконичней ничего не придумалось
-
+// CheckCookies middleware для проверки Cookie
 func CheckCookies(secretKey string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

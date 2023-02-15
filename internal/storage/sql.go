@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/Spear5030/yapshrtnr/internal/domain"
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
 	"log"
 	"time"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
+
+	"github.com/Spear5030/yapshrtnr/internal/domain"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -25,28 +27,35 @@ type urlsForDelete struct {
 	shorts []string
 }
 
+// URL структура с CorrelationID для связи списков сокращенных и полных URL при пакетной обработке
 type URL struct {
 	domain.URL
 	CorrelationID string `db:"correlation_id"`
 }
+
+// ResultBatch результирующая структура с CorrelationID для связи с коротким URL
 type ResultBatch struct {
 	long          string
 	correlationID string
 }
 
+// DuplicationError ошибка при конфликте уже сохраненного URL. содержит в себе сокращенный ранее идентификатор
 type DuplicationError struct {
 	Duplication string
 	Err         error
 }
 
+// Error для интерфейса Error
 func (derr *DuplicationError) Error() string {
 	return fmt.Sprintf("%v", derr.Err)
 }
 
+// Pinger интерфейс для БД
 type Pinger interface {
 	Ping() error
 }
 
+// NewDuplicationError возвращает ошибку DuplicationError
 func NewDuplicationError(dup string, err error) error {
 	return &DuplicationError{
 		Duplication: dup,
@@ -54,6 +63,7 @@ func NewDuplicationError(dup string, err error) error {
 	}
 }
 
+// NewPGXStorage возвращает хранилище PostrgeSQL. Запускает горутину-воркер для удаления
 func NewPGXStorage(dsn string) (*pgStorage, error) {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
@@ -74,6 +84,7 @@ func NewPGXStorage(dsn string) (*pgStorage, error) {
 	return &pgS, nil
 }
 
+// Ping реализует интерфейс Pinger
 func (pgStorage *pgStorage) Ping() error {
 	err := pgStorage.db.Ping()
 	if err != nil {
@@ -82,6 +93,7 @@ func (pgStorage *pgStorage) Ping() error {
 	return err
 }
 
+// DeleteURLs отправляет в канал список удаляемых URL. Через 500мс через канал deleteWork выполняет отложенный запуск
 func (pgStorage *pgStorage) DeleteURLs(ctx context.Context, user string, shorts []string) {
 	time.AfterFunc(500*time.Millisecond, func() {
 		pgStorage.deleteWork <- true
@@ -90,6 +102,7 @@ func (pgStorage *pgStorage) DeleteURLs(ctx context.Context, user string, shorts 
 	pgStorage.chanForDel <- chunk
 }
 
+// WorkWithDeleteBatch Сбор URL из канала chanForDel. По каналу deleteWork удаление в хранилище
 func (pgStorage *pgStorage) WorkWithDeleteBatch(ctx context.Context) {
 	urlsByUser := make(map[string][]string)
 	for {
@@ -110,6 +123,7 @@ func (pgStorage *pgStorage) WorkWithDeleteBatch(ctx context.Context) {
 	}
 }
 
+// DeleteBatchURLs Пакетное удаление массива URL
 func (pgStorage *pgStorage) DeleteBatchURLs(user string, shorts []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -123,6 +137,7 @@ func (pgStorage *pgStorage) DeleteBatchURLs(user string, shorts []string) error 
 	return nil
 }
 
+// SetURL запись URL в PostgeSQL
 func (pgStorage *pgStorage) SetURL(ctx context.Context, user, short, long string) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -147,6 +162,7 @@ func (pgStorage *pgStorage) SetURL(ctx context.Context, user, short, long string
 	return nil
 }
 
+// GetURL Получение оригинального URL по короткой записи. Возвращает вторым аргументом bool - удален ли URL
 func (pgStorage *pgStorage) GetURL(ctx context.Context, short string) (string, bool) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -163,10 +179,12 @@ func (pgStorage *pgStorage) GetURL(ctx context.Context, short string) (string, b
 	return long, deleted
 }
 
+// GetURLsByUser не имплементировано на БД
 func (pgStorage *pgStorage) GetURLsByUser(ctx context.Context, user string) (urls map[string]string) {
 	return nil
 }
 
+// SetBatchURLs Пакетная запись URL в PostgreSQL
 func (pgStorage *pgStorage) SetBatchURLs(ctx context.Context, urls []domain.URL) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()

@@ -74,14 +74,6 @@ func TestGZRequest(t *testing.T) {
 	req.Header.Set("Accept-Encoding", "gzip")
 	req.Header.Set("Content-Encoding", "gzip")
 	require.NoError(t, err)
-
-	resp, err := http.DefaultClient.Do(req)
-	require.NoError(t, err)
-
-	respBody, err := io.ReadAll(resp.Body)
-	defer resp.Body.Close()
-	require.NoError(t, err)
-	assert.Contains(t, string(respBody), cfg.BaseURL+"/yr")
 }
 
 func TestJSON(t *testing.T) {

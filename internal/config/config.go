@@ -1,10 +1,13 @@
+// Пакет config определяет конфигурирование приложения.
 package config
 
 import (
 	"flag"
+
 	"github.com/caarlos0/env"
 )
 
+// Config содержит строки конфигурации приложения. Значения собираются из ENV.
 type Config struct {
 	Addr        string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
 	BaseURL     string `env:"BASE_URL" envDefault:"http://localhost:8080"`
@@ -23,6 +26,7 @@ func init() {
 	flag.StringVar(&cfg.Database, "k", cfg.Key, "Key string for sign cookies")
 }
 
+// New возвращает конфиг с дефолтными значениями, если не указаны флагами.
 func New() (Config, error) {
 	if err := env.Parse(&cfg); err != nil {
 		return Config{}, err

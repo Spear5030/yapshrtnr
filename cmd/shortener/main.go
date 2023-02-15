@@ -1,9 +1,10 @@
 package main
 
 import (
+	"log"
+
 	"github.com/Spear5030/yapshrtnr/internal/app"
 	"github.com/Spear5030/yapshrtnr/internal/config"
-	"log"
 )
 
 func main() {

@@ -1,7 +1,15 @@
+// Пакет app запускает само приложение
 package app
 
 import (
 	"context"
+	"log"
+	"math/rand"
+	"net/http"
+	"time"
+
+	"go.uber.org/zap"
+
 	"github.com/Spear5030/yapshrtnr/db/migrate"
 	"github.com/Spear5030/yapshrtnr/internal/config"
 	"github.com/Spear5030/yapshrtnr/internal/domain"
@@ -9,18 +17,15 @@ import (
 	"github.com/Spear5030/yapshrtnr/internal/router"
 	"github.com/Spear5030/yapshrtnr/internal/storage"
 	"github.com/Spear5030/yapshrtnr/pkg/logger"
-	"go.uber.org/zap"
-	"log"
-	"math/rand"
-	"net/http"
-	"time"
 )
 
+// App основная структура приложения. HTTP сервер и логгер
 type App struct {
 	HTTPServer *http.Server
 	logger     *zap.Logger
 }
 
+// New возвращает App
 func New(cfg config.Config) (*App, error) {
 
 	var storager interface {
@@ -68,6 +73,7 @@ func New(cfg config.Config) (*App, error) {
 	}, nil
 }
 
+// Run запуск приложения.
 func (app *App) Run() error {
 	rand.Seed(time.Now().UnixNano())
 	return app.HTTPServer.ListenAndServe()
