@@ -1,14 +1,11 @@
-// Пакет app запускает само приложение
+// Package app запускает само приложение
 package app
 
 import (
 	"context"
-	"log"
-	"math/rand"
-	"net/http"
-	"time"
-
 	"go.uber.org/zap"
+	"log"
+	"net/http"
 
 	"github.com/Spear5030/yapshrtnr/db/migrate"
 	"github.com/Spear5030/yapshrtnr/internal/config"
@@ -75,6 +72,5 @@ func New(cfg config.Config) (*App, error) {
 
 // Run запуск приложения.
 func (app *App) Run() error {
-	rand.Seed(time.Now().UnixNano())
 	return app.HTTPServer.ListenAndServe()
 }

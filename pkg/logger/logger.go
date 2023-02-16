@@ -1,3 +1,4 @@
+// Package logger отвечает за создание zap.Logger
 package logger
 
 import "go.uber.org/zap"

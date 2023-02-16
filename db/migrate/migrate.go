@@ -1,4 +1,4 @@
-// Пакет migrate отвечает за миграции.
+// Package migrate отвечает за миграции.
 package migrate
 
 import (

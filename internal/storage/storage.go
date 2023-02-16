@@ -1,4 +1,4 @@
-// Пакет storage реализует слой хранения
+// Package storage реализует слой хранения
 package storage
 
 import (
@@ -115,12 +115,12 @@ func (fStorage *fileStorage) SetURL(ctx context.Context, user, short, long strin
 	}
 	defer file.Close()
 	var buffer bytes.Buffer
-	link := link{
+	linkToEncode := link{
 		User:  user,
 		Short: short,
 		Long:  long,
 	}
-	if err := gob.NewEncoder(&buffer).Encode(link); err != nil {
+	if err := gob.NewEncoder(&buffer).Encode(linkToEncode); err != nil {
 		panic(err)
 	}
 	file.Write(append(buffer.Bytes(), 13))
