@@ -17,8 +17,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	for _, file := range pass.Files {
 		ast.Inspect(file, func(node ast.Node) bool {
 			switch x := node.(type) {
-			case *ast.Package:
-				if x.Name != "main" {
+			case *ast.File: // Контринтуитивно - имя пакета
+				if x.Name.String() != "main" {
 					return false
 				}
 			case *ast.FuncDecl:
