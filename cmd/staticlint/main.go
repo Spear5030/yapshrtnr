@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"github.com/Spear5030/yapshrtnr/cmd/staticlint/analyzers"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/multichecker"
 	"golang.org/x/tools/go/analysis/passes/assign"
@@ -71,6 +71,8 @@ func main() {
 	for _, v := range simple.Analyzers {
 		myСhecks = append(myСhecks, v.Analyzer)
 	}
-	fmt.Println(myСhecks)
+
+	myСhecks = append(myСhecks, analyzers.OsExitAnalyzer)
+
 	multichecker.Main(myСhecks...)
 }
