@@ -24,7 +24,7 @@ func init() {
 	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "Base URL")
 	flag.StringVar(&cfg.FileStorage, "f", cfg.FileStorage, "path to file storage")
 	flag.StringVar(&cfg.Database, "d", cfg.Database, "DSN for PGSQL")
-	flag.StringVar(&cfg.Database, "k", cfg.Key, "Key string for sign cookies")
+	flag.StringVar(&cfg.Key, "k", cfg.Key, "Key string for sign cookies")
 	flag.BoolVar(&cfg.HTTPS, "s", cfg.HTTPS, "Key string for sign cookies")
 }
 
