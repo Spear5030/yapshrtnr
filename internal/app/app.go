@@ -20,6 +20,7 @@ import (
 type App struct {
 	HTTPServer *http.Server
 	logger     *zap.Logger
+	tls        bool
 }
 
 // New возвращает App
@@ -67,10 +68,14 @@ func New(cfg config.Config) (*App, error) {
 	}
 	return &App{
 		HTTPServer: srv,
+		tls:        cfg.HTTPS,
 	}, nil
 }
 
 // Run запуск приложения.
 func (app *App) Run() error {
+	if app.tls {
+		return app.HTTPServer.ListenAndServeTLS("cert/cert.pem", "cert/private.key")
+	}
 	return app.HTTPServer.ListenAndServe()
 }
