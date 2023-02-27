@@ -107,6 +107,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 			res = fmt.Sprintf("%s/%s", h.BaseURL, de.Duplication)
 		}
 	}
+	h.logger.Info("SetURL", zap.String("long", string(b)), zap.String("short", short), zap.Int("status", status))
 	w.WriteHeader(status)
 	w.Write([]byte(res))
 }
