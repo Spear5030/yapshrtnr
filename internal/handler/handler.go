@@ -81,15 +81,18 @@ func New(logger *zap.Logger, storage storage, baseURL string, key string) *Handl
 func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
+		h.logger.Info("Error readBody", zap.String("err", err.Error()))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	short, err := module.ShortingURL(string(b))
 	if err != nil {
+		h.logger.Info("Error shorting", zap.String("err", err.Error()))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	user, err := getUserIDFROMCookie(r)
 	if err != nil {
+		h.logger.Info("Error getUserID", zap.String("err", err.Error()))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
@@ -100,6 +103,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 	res := fmt.Sprintf("%s/%s", h.BaseURL, short)
 	if err != nil {
 		if !errors.As(err, &de) {
+			h.logger.Info("Error setURL", zap.String("err", err.Error()))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		} else {
