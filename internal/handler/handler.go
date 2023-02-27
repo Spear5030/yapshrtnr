@@ -85,6 +85,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	h.logger.Info("will shorting URL", zap.String("long", string(b)))
 	short, err := module.ShortingURL(string(b))
 	if err != nil {
 		h.logger.Info("Error shorting", zap.String("err", err.Error()))
