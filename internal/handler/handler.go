@@ -167,7 +167,7 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	urls := make([]domain.URL, 0, len(inputs))
 	for _, url := range inputs {
 		tmpShort, errInput := module.ShortingURL(url.Long)
-		if err != nil {
+		if errInput != nil {
 			http.Error(w, errInput.Error(), http.StatusBadRequest)
 		}
 		tmps = append(tmps, batchTmp{
@@ -180,6 +180,7 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 			Short: tmpShort,
 			Long:  url.Long,
 		})
+		fmt.Println(tmpShort, ":", url.Long)
 	}
 
 	result := make([]batchResult, len(inputs))
