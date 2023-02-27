@@ -50,6 +50,7 @@ func New(cfg config.Config) (*App, error) {
 			log.Fatal(err)
 		}
 		storager = pgStorage
+		lg.Info("PostgreSQL storage.", zap.String("config", cfg.Database))
 	} else if len(cfg.FileStorage) > 0 {
 		fileStorage, err := storage.NewFileStorage(cfg.FileStorage)
 		if err != nil {
@@ -59,6 +60,7 @@ func New(cfg config.Config) (*App, error) {
 	} else {
 		memoryStorage := storage.NewMemoryStorage()
 		storager = memoryStorage
+		lg.Info("Inmemory storage.")
 	}
 	h := handler.New(lg, storager, cfg.BaseURL, cfg.Key)
 	r := router.New(h)
