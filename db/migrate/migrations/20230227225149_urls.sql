@@ -1,6 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 SELECT 'up SQL query';
+DROP TABLE urls;
 
 CREATE TABLE IF NOT EXISTS urls
 (   short      VARCHAR      PRIMARY KEY,
@@ -13,6 +14,6 @@ CREATE UNIQUE INDEX long_idx1 ON urls (long);
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE urls;
+
 SELECT 'down SQL query';
 -- +goose StatementEnd
