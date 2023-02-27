@@ -183,7 +183,9 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result := make([]batchResult, len(inputs))
-	if h.Storage.SetBatchURLs(r.Context(), urls) != nil {
+	err = h.Storage.SetBatchURLs(r.Context(), urls)
+	if err != nil {
+		h.logger.Info(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	for i, urlEnt := range tmps {
