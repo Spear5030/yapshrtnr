@@ -1,4 +1,4 @@
-// Пакет module содержит вспомогательные функции
+// Package module содержит функции бизнес-логики
 package module
 
 import (

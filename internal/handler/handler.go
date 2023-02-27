@@ -1,17 +1,17 @@
-// Пакет handler обрабатывает http запросы
+// Package handler обрабатывает http запросы
 package handler
 
 import (
 	"compress/gzip"
 	"context"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"strings"
 
@@ -160,9 +160,9 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	tmps := make([]batchTmp, 0, len(inputs))
 	urls := make([]domain.URL, 0, len(inputs))
 	for _, url := range inputs {
-		tmpShort, err := module.ShortingURL(url.Long)
+		tmpShort, errInput := module.ShortingURL(url.Long)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, errInput.Error(), http.StatusBadRequest)
 		}
 		tmps = append(tmps, batchTmp{
 			Short:         tmpShort,
@@ -202,8 +202,8 @@ func (h *Handler) PostJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	urlEnt := input{}
-	if err := json.Unmarshal(b, &urlEnt); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if errUnmarshal := json.Unmarshal(b, &urlEnt); errUnmarshal != nil {
+		http.Error(w, errUnmarshal.Error(), http.StatusBadRequest)
 	}
 	short, err := module.ShortingURL(urlEnt.URL)
 	if err != nil {
