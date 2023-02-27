@@ -70,6 +70,7 @@ func New(cfg config.Config) (*App, error) {
 	}
 	return &App{
 		HTTPServer: srv,
+		logger:     lg,
 		tls:        cfg.HTTPS,
 	}, nil
 }
