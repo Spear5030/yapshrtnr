@@ -78,9 +78,9 @@ func New(cfg config.Config) (*App, error) {
 // Run запуск приложения.
 func (app *App) Run() error {
 	if app.tls {
-		app.logger.Info("Listen with TLS")
+		app.logger.Info("Listen with TLS " + app.HTTPServer.Addr)
 		return app.HTTPServer.ListenAndServeTLS("cert/cert.pem", "cert/private.key")
 	}
-	app.logger.Info("Listen without TLS")
+	app.logger.Info("Listen without TLS " + app.HTTPServer.Addr)
 	return app.HTTPServer.ListenAndServe()
 }

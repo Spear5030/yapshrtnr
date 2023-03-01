@@ -17,7 +17,7 @@ const (
 
 // Config содержит строки конфигурации приложения. Значения собираются из ENV.
 type Config struct {
-	Addr        string `env:"SERVER_ADDRESS" json	:"server_address"`
+	Addr        string `env:"SERVER_ADDRESS" json:"server_address"`
 	BaseURL     string `env:"BASE_URL" json:"base_url"`
 	FileStorage string `env:"FILE_STORAGE_PATH" json:"file_storage_path"`
 	Database    string `env:"DATABASE_DSN" json:"database_dsn"`
@@ -52,12 +52,12 @@ func New() (Config, error) {
 		}
 		_ = env.Parse(&cfg) //если ошибка есть, ее отловили выше
 		flag.Parse()        //повторные вызовы для приоритизации по ТЗ file->env->flag
-		if len(cfg.Addr) == 0 {
-			cfg.Addr = defaultAddr
-		}
-		if len(cfg.BaseURL) == 0 {
-			cfg.BaseURL = defaultBaseURL
-		}
+	}
+	if len(cfg.Addr) == 0 {
+		cfg.Addr = defaultAddr
+	}
+	if len(cfg.BaseURL) == 0 {
+		cfg.BaseURL = defaultBaseURL
 	}
 	return cfg, nil
 }
