@@ -179,5 +179,12 @@ func (mStorage *storage) DeleteURLs(ctx context.Context, user string, shorts []s
 
 // DeleteURLs не имплементировано для данного хранилища
 func (fStorage *fileStorage) DeleteURLs(ctx context.Context, user string, shorts []string) {
+}
 
+func (mStorage *storage) Shutdown() error {
+	return nil
+}
+
+func (fStorage *fileStorage) Shutdown() error {
+	return nil
 }

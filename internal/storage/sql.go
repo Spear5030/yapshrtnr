@@ -93,6 +93,13 @@ func (pgStorage *pgStorage) Ping() error {
 	return err
 }
 
+// Shutdown форсит пакетное удаление
+func (pgStorage *pgStorage) Shutdown() error {
+	log.Println("Shutdown Postgre storage")
+	pgStorage.deleteWork <- true
+	return pgStorage.db.Close()
+}
+
 // DeleteURLs отправляет в канал список удаляемых URL. Через 500мс через канал deleteWork выполняет отложенный запуск
 func (pgStorage *pgStorage) DeleteURLs(ctx context.Context, user string, shorts []string) {
 	time.AfterFunc(500*time.Millisecond, func() {
