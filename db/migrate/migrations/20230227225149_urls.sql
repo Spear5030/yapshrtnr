@@ -14,6 +14,6 @@ CREATE UNIQUE INDEX long_idx1 ON urls (long);
 
 -- +goose Down
 -- +goose StatementBegin
-
+DROP TABLE urls;
 SELECT 'down SQL query';
 -- +goose StatementEnd
