@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 SELECT 'up SQL query';
-
+DROP TABLE urls;
 CREATE TABLE IF NOT EXISTS urls
 (   short      VARCHAR      PRIMARY KEY,
     long       VARCHAR      NOT NULL,
