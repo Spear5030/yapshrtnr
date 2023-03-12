@@ -28,5 +28,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Fatal(a.Run())
+	err = a.Run()
+	if err != nil {
+		log.Println(err)
+	}
 }

@@ -81,15 +81,19 @@ func New(logger *zap.Logger, storage storage, baseURL string, key string) *Handl
 func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
+		h.logger.Info("Error readBody", zap.String("err", err.Error()))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	h.logger.Info("will shorting URL", zap.String("long", string(b)))
 	short, err := module.ShortingURL(string(b))
 	if err != nil {
+		h.logger.Info("Error shorting", zap.String("err", err.Error()))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	user, err := getUserIDFROMCookie(r)
 	if err != nil {
+		h.logger.Info("Error getUserID", zap.String("err", err.Error()))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
@@ -100,6 +104,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 	res := fmt.Sprintf("%s/%s", h.BaseURL, short)
 	if err != nil {
 		if !errors.As(err, &de) {
+			h.logger.Info("Error setURL", zap.String("err", err.Error()))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		} else {
@@ -107,6 +112,7 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 			res = fmt.Sprintf("%s/%s", h.BaseURL, de.Duplication)
 		}
 	}
+	h.logger.Info("SetURL", zap.String("long", string(b)), zap.String("short", short), zap.Int("status", status))
 	w.WriteHeader(status)
 	w.Write([]byte(res))
 }
@@ -161,7 +167,7 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	urls := make([]domain.URL, 0, len(inputs))
 	for _, url := range inputs {
 		tmpShort, errInput := module.ShortingURL(url.Long)
-		if err != nil {
+		if errInput != nil {
 			http.Error(w, errInput.Error(), http.StatusBadRequest)
 		}
 		tmps = append(tmps, batchTmp{
@@ -174,10 +180,13 @@ func (h *Handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 			Short: tmpShort,
 			Long:  url.Long,
 		})
+		fmt.Println(tmpShort, ":", url.Long)
 	}
 
 	result := make([]batchResult, len(inputs))
-	if h.Storage.SetBatchURLs(r.Context(), urls) != nil {
+	err = h.Storage.SetBatchURLs(r.Context(), urls)
+	if err != nil {
+		h.logger.Info(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	for i, urlEnt := range tmps {
