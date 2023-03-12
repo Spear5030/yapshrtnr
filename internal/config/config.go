@@ -16,43 +16,43 @@ const (
 )
 
 // CustomIPNet кастомный net.IPNet для интрейфесов из flag, env,json
-type CustomIpNet net.IPNet
+type CustomIPNet net.IPNet
 
 // UnmarshalText  для получения net.IPNet из строки из ENV
-func (t *CustomIpNet) UnmarshalText(data []byte) error {
+func (t *CustomIPNet) UnmarshalText(data []byte) error {
 	_, ipNet, err := net.ParseCIDR(string(data))
 	if err != nil {
 		log.Println("error parsing trusted subnet from ENV", err)
 		return err
 	}
-	*t = CustomIpNet(*ipNet)
+	*t = CustomIPNet(*ipNet)
 	return err
 }
 
 // UnmarshalJSON для получения net.IPNet из строки из JSON конфига
-func (t *CustomIpNet) UnmarshalJSON(data []byte) error {
+func (t *CustomIPNet) UnmarshalJSON(data []byte) error {
 	_, ipNet, err := net.ParseCIDR(string(data))
 	if err != nil {
 		log.Println("error parsing trusted subnet from JSON", err)
 		return err
 	}
-	*t = CustomIpNet(*ipNet)
+	*t = CustomIPNet(*ipNet)
 	return err
 }
 
 // String для имплементации flag.Value interface - net.IPNet из строки из флага
-func (t *CustomIpNet) String() string {
+func (t *CustomIPNet) String() string {
 	return t.Mask.String()
 }
 
 // Set для имплементации flag.Value interface - net.IPNet из строки из флага
-func (t *CustomIpNet) Set(data string) error {
+func (t *CustomIPNet) Set(data string) error {
 	_, ipNet, err := net.ParseCIDR(data)
 	if err != nil {
 		log.Println("error parsing trusted subnet from flag", err)
 		return err
 	}
-	*t = CustomIpNet(*ipNet)
+	*t = CustomIPNet(*ipNet)
 	return err
 }
 
@@ -65,7 +65,7 @@ type Config struct {
 	Key           string      `env:"COOKIES_KEY" envDefault:"V3ry$trongK3y"`
 	HTTPS         bool        `env:"ENABLE_HTTPS" json:"enable_https"`
 	Config        string      `env:"CONFIG"`
-	TrustedSubnet CustomIpNet `env:"TRUSTED_SUBNET" json:"trusted_subnet"`
+	TrustedSubnet CustomIPNet `env:"TRUSTED_SUBNET" json:"trusted_subnet"`
 }
 
 var cfg Config
