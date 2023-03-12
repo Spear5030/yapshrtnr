@@ -21,21 +21,18 @@ func TestHandler_GetInternalStats(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	h.GetInternalStats(w, req)
-	w.Result()
 	require.NoError(t, err)
 	require.Equal(t, http.StatusForbidden, w.Code)
 
 	w = httptest.NewRecorder()
 	req.Header.Set("X-Real-IP", "127.0.0.1")
 	h.GetInternalStats(w, req)
-	w.Result()
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, w.Code)
 
 	w = httptest.NewRecorder()
 	req.Header.Set("X-Real-IP", "192.168.0.1")
 	h.GetInternalStats(w, req)
-	w.Result()
 	require.NoError(t, err)
 	require.Equal(t, http.StatusForbidden, w.Code)
 }
@@ -49,21 +46,18 @@ func TestHandler_GetInternalStatsWithoutCIDR(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	h.GetInternalStats(w, req)
-	w.Result()
 	require.NoError(t, err)
 	require.Equal(t, http.StatusForbidden, w.Code)
 
 	w = httptest.NewRecorder()
 	req.Header.Set("X-Real-IP", "127.0.0.1")
 	h.GetInternalStats(w, req)
-	w.Result()
 	require.NoError(t, err)
 	require.Equal(t, http.StatusForbidden, w.Code)
 
 	w = httptest.NewRecorder()
 	req.Header.Set("X-Real-IP", "192.168.0.1")
 	h.GetInternalStats(w, req)
-	w.Result()
 	require.NoError(t, err)
 	require.Equal(t, http.StatusForbidden, w.Code)
 
