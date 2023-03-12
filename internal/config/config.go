@@ -4,10 +4,10 @@ package config
 import (
 	"encoding/json"
 	"flag"
-	"log"
-	"os"
-
 	"github.com/caarlos0/env"
+	"log"
+	"net"
+	"os"
 )
 
 const (
@@ -15,15 +15,57 @@ const (
 	defaultBaseURL = "http://localhost:8080"
 )
 
+// CustomIPNet кастомный net.IPNet для интрейфесов из flag, env,json
+type CustomIpNet net.IPNet
+
+// UnmarshalText  для получения net.IPNet из строки из ENV
+func (t *CustomIpNet) UnmarshalText(data []byte) error {
+	_, ipNet, err := net.ParseCIDR(string(data))
+	if err != nil {
+		log.Println("error parsing trusted subnet from ENV", err)
+		return err
+	}
+	*t = CustomIpNet(*ipNet)
+	return err
+}
+
+// UnmarshalJSON для получения net.IPNet из строки из JSON конфига
+func (t *CustomIpNet) UnmarshalJSON(data []byte) error {
+	_, ipNet, err := net.ParseCIDR(string(data))
+	if err != nil {
+		log.Println("error parsing trusted subnet from JSON", err)
+		return err
+	}
+	*t = CustomIpNet(*ipNet)
+	return err
+}
+
+// String для имплементации flag.Value interface - net.IPNet из строки из флага
+func (t *CustomIpNet) String() string {
+	return t.Mask.String()
+}
+
+// Set для имплементации flag.Value interface - net.IPNet из строки из флага
+func (t *CustomIpNet) Set(data string) error {
+	_, ipNet, err := net.ParseCIDR(data)
+	if err != nil {
+		log.Println("error parsing trusted subnet from flag", err)
+		return err
+	}
+	*t = CustomIpNet(*ipNet)
+	return err
+}
+
 // Config содержит строки конфигурации приложения. Значения собираются из ENV.
 type Config struct {
-	Addr        string `env:"SERVER_ADDRESS" json:"server_address"`
-	BaseURL     string `env:"BASE_URL" json:"base_url"`
-	FileStorage string `env:"FILE_STORAGE_PATH" json:"file_storage_path"`
-	Database    string `env:"DATABASE_DSN" json:"database_dsn"`
-	Key         string `env:"COOKIES_KEY" envDefault:"V3ry$trongK3y"`
-	HTTPS       bool   `env:"ENABLE_HTTPS" json:"enable_https"`
-	Config      string `env:"CONFIG"`
+	Addr          string      `env:"SERVER_ADDRESS" json:"server_address"`
+	BaseURL       string      `env:"BASE_URL" json:"base_url"`
+	FileStorage   string      `env:"FILE_STORAGE_PATH" json:"file_storage_path"`
+	Database      string      `env:"DATABASE_DSN" json:"database_dsn"`
+	Key           string      `env:"COOKIES_KEY" envDefault:"V3ry$trongK3y"`
+	HTTPS         bool        `env:"ENABLE_HTTPS" json:"enable_https"`
+	Config        string      `env:"CONFIG"`
+	TrustedSubnet CustomIpNet `env:"TRUSTED_SUBNET" json:"trusted_subnet"`
 }
 
 var cfg Config
@@ -35,6 +77,7 @@ func init() {
 	flag.StringVar(&cfg.Database, "d", cfg.Database, "DSN for PGSQL")
 	flag.StringVar(&cfg.Key, "k", cfg.Key, "Key string for sign cookies")
 	flag.BoolVar(&cfg.HTTPS, "s", cfg.HTTPS, "Enable HTTPS")
+	flag.Var(&cfg.TrustedSubnet, "t", "Trusted subnet in CIDR")
 	flag.StringVar(&cfg.Config, "c", cfg.Config, "Config file destination")
 	flag.StringVar(&cfg.Config, "config", cfg.Config, "Config file destination")
 }

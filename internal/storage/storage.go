@@ -190,3 +190,23 @@ func (mStorage *storage) Shutdown() error {
 func (fStorage *fileStorage) Shutdown() error {
 	return nil
 }
+
+// GetUsersCount возвращает количество пользователей
+func (mStorage *storage) GetUsersCount(ctx context.Context) (int, error) {
+	return len(mStorage.Users), nil
+}
+
+// GetUsersCount возвращает количество пользователей
+func (fStorage *fileStorage) GetUsersCount(ctx context.Context) (int, error) {
+	return len(fStorage.Users), nil
+}
+
+// GetUrlsCount возвращает количество ссылок
+func (mStorage *storage) GetUrlsCount(ctx context.Context) (int, error) {
+	return len(mStorage.URLs), nil
+}
+
+// GetUrlsCount возвращает количество ссылок
+func (fStorage *fileStorage) GetUrlsCount(ctx context.Context) (int, error) {
+	return len(fStorage.URLs), nil
+}

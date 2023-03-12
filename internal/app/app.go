@@ -5,6 +5,7 @@ import (
 	"context"
 	"go.uber.org/zap"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -35,6 +36,8 @@ func New(cfg config.Config) (*App, error) {
 		GetURLsByUser(ctx context.Context, user string) (urls map[string]string)
 		SetBatchURLs(ctx context.Context, urls []domain.URL) error
 		DeleteURLs(ctx context.Context, user string, shorts []string)
+		GetUsersCount(ctx context.Context) (int, error)
+		GetUrlsCount(ctx context.Context) (int, error)
 		Shutdown() error // возможно стоит вынести в отдельный интерфейс БД - ping и shutdown, т.к оба реализуются только для Postgre
 	} // также при усложнении стоит добавить context. но при текущей реализации imho избыточно
 
@@ -65,7 +68,7 @@ func New(cfg config.Config) (*App, error) {
 		storager = memoryStorage
 		lg.Info("Inmemory storage.")
 	}
-	h := handler.New(lg, storager, cfg.BaseURL, cfg.Key)
+	h := handler.New(lg, storager, cfg.BaseURL, cfg.Key, net.IPNet(cfg.TrustedSubnet))
 	r := router.New(h)
 	srv := &http.Server{
 		Addr:    cfg.Addr,

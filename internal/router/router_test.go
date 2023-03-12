@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -37,7 +38,7 @@ func TestRouter(t *testing.T) {
 	cfg, err := config.New()
 	require.NoError(t, err)
 	lg, _ := logger.New(true)
-	h := handler.New(lg, testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
+	h := handler.New(lg, testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key, net.IPNet(cfg.TrustedSubnet))
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -62,7 +63,7 @@ func TestGZRequest(t *testing.T) {
 	cfg, err := config.New()
 	require.NoError(t, err)
 	lg, _ := logger.New(true)
-	h := handler.New(lg, testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
+	h := handler.New(lg, testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key, net.IPNet(cfg.TrustedSubnet))
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -80,7 +81,7 @@ func TestJSON(t *testing.T) {
 	cfg, err := config.New()
 	require.NoError(t, err)
 	lg, _ := logger.New(true)
-	h := handler.New(lg, testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
+	h := handler.New(lg, testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key, net.IPNet(cfg.TrustedSubnet))
 	r := New(h)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
