@@ -18,6 +18,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"log"
 	"net"
 )
 
@@ -69,13 +70,13 @@ func New(storage storage, logger *zap.Logger, port string, baseURL string, skey 
 
 // Start слушает определенный порт и запускает в горутине grpc сервер
 func (s *GRPCServer) Start() {
-	l, err := net.Listen("tcp", s.Port)
+	l, err := net.Listen("tcp", ":"+s.Port)
 	if err != nil {
-		fmt.Println("error with listen gRPC:", err)
+		log.Fatal("error with listen gRPC:", err)
 	}
 	go func() {
 		if err = s.Server.Serve(l); err != nil {
-			fmt.Println("error with serve gRPC:", err)
+			log.Fatal("error with serve gRPC:", err)
 		}
 	}()
 }
