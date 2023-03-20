@@ -106,7 +106,7 @@ func New() (Config, error) {
 		cfg.BaseURL = defaultBaseURL
 	}
 	if len(cfg.GRPCPort) == 0 {
-		cfg.BaseURL = defaultGRPCPort
+		cfg.GRPCPort = defaultGRPCPort
 	}
 	return cfg, nil
 }
