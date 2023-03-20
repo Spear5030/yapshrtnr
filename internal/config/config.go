@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	defaultAddr    = "localhost:8080"
-	defaultBaseURL = "http://localhost:8080"
+	defaultAddr     = "localhost:8080"
+	defaultBaseURL  = "http://localhost:8080"
+	defaultGRPCPort = "3200"
 )
 
 // CustomIPNet кастомный net.IPNet для интрейфесов из flag, env,json
@@ -66,6 +67,7 @@ type Config struct {
 	HTTPS         bool        `env:"ENABLE_HTTPS" json:"enable_https"`
 	Config        string      `env:"CONFIG"`
 	TrustedSubnet CustomIPNet `env:"TRUSTED_SUBNET" json:"trusted_subnet"`
+	GRPCPort      string      `env:"GRPC_PORT" json:"grpc_port"`
 }
 
 var cfg Config
@@ -80,6 +82,7 @@ func init() {
 	flag.Var(&cfg.TrustedSubnet, "t", "Trusted subnet in CIDR")
 	flag.StringVar(&cfg.Config, "c", cfg.Config, "Config file destination")
 	flag.StringVar(&cfg.Config, "config", cfg.Config, "Config file destination")
+	flag.StringVar(&cfg.GRPCPort, "g", cfg.GRPCPort, "grpc server port")
 }
 
 // New возвращает конфиг. Приоритет file->env->flag
@@ -101,6 +104,9 @@ func New() (Config, error) {
 	}
 	if len(cfg.BaseURL) == 0 {
 		cfg.BaseURL = defaultBaseURL
+	}
+	if len(cfg.GRPCPort) == 0 {
+		cfg.BaseURL = defaultGRPCPort
 	}
 	return cfg, nil
 }

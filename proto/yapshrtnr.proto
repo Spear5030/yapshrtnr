@@ -56,7 +56,7 @@ service Shortener {
   rpc PingDB(google.protobuf.Empty) returns (google.protobuf.Empty);
   rpc GetURL(Short) returns (GetResponse);
   rpc PostURL(Long) returns(Short); // todo AlreadyExists Code
-  rpc GetInternalStats(google.protobuf.Empty) returns (StatsResponse); // todo auth error
+  rpc GetInternalStats(google.protobuf.Empty) returns (StatsResponse); // todo subnet check
   rpc PostBatchURLs(RequestBatchURLs) returns(ResponseBatchURLs);
   rpc DeleteBatchByUser(RequestDeleteBatch) returns (google.protobuf.Empty);
   rpc GetURLsByUser(google.protobuf.Empty) returns (ResponseGetURLsByUser); // todo NotFound Code

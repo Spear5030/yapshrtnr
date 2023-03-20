@@ -14,6 +14,7 @@ import (
 	"github.com/Spear5030/yapshrtnr/db/migrate"
 	"github.com/Spear5030/yapshrtnr/internal/config"
 	"github.com/Spear5030/yapshrtnr/internal/domain"
+	grpcS "github.com/Spear5030/yapshrtnr/internal/grpc/server"
 	"github.com/Spear5030/yapshrtnr/internal/handler"
 	"github.com/Spear5030/yapshrtnr/internal/router"
 	"github.com/Spear5030/yapshrtnr/internal/storage"
@@ -23,6 +24,7 @@ import (
 // App основная структура приложения. HTTP сервер и логгер
 type App struct {
 	HTTPServer *http.Server
+	GRPCServer *grpcS.GRPCServer
 	logger     *zap.Logger
 	tls        bool
 }
@@ -75,21 +77,24 @@ func New(cfg config.Config) (*App, error) {
 		Handler: r,
 	}
 
+	grpcSrv := grpcS.New(storager, lg, cfg.GRPCPort, cfg.BaseURL, cfg.Key, net.IPNet(cfg.TrustedSubnet))
+
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	go func() {
 		<-sigint
 		lg.Info("Will gracefully shutdown")
+		grpcSrv.Server.GracefulStop()
 		if err := storager.Shutdown(); err != nil {
 			lg.Info("Storage Shutdown:", zap.Error(err))
 		}
 		if err := srv.Shutdown(context.Background()); err != nil {
 			lg.Info("HTTP server Shutdown:", zap.Error(err))
 		}
-
 	}()
 	return &App{
 		HTTPServer: srv,
+		GRPCServer: grpcSrv,
 		logger:     lg,
 		tls:        cfg.HTTPS,
 	}, nil
@@ -97,6 +102,7 @@ func New(cfg config.Config) (*App, error) {
 
 // Run запуск приложения.
 func (app *App) Run() error {
+	app.GRPCServer.Start()
 	if app.tls {
 		app.logger.Info("Listen with TLS " + app.HTTPServer.Addr)
 		return app.HTTPServer.ListenAndServeTLS("cert/cert.pem", "cert/private.key")
