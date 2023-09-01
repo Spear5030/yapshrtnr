@@ -4,6 +4,7 @@ import (
 	"github.com/Spear5030/yapshrtnr/internal/config"
 	testStorage "github.com/Spear5030/yapshrtnr/internal/storage"
 	"github.com/Spear5030/yapshrtnr/pkg/logger"
+	"net"
 	"net/http/httptest"
 	"testing"
 )
@@ -11,7 +12,7 @@ import (
 func BenchmarkHandler_PostURLMemory(b *testing.B) {
 	cfg, _ := config.New()
 	lg, _ := logger.New(true)
-	h := New(lg, testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key)
+	h := New(lg, testStorage.NewMemoryStorage(), cfg.BaseURL, cfg.Key, net.IPNet(cfg.TrustedSubnet))
 	r := httptest.NewRequest("Post", "/", nil)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -26,7 +27,7 @@ func BenchmarkHandler_PostURLFile(b *testing.B) {
 	cfg, _ := config.New()
 	lg, _ := logger.New(true)
 	s, _ := testStorage.NewFileStorage("bench.base")
-	h := New(lg, s, cfg.BaseURL, cfg.Key)
+	h := New(lg, s, cfg.BaseURL, cfg.Key, net.IPNet(cfg.TrustedSubnet))
 	r := httptest.NewRequest("Post", "/", nil)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

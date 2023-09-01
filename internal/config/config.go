@@ -4,26 +4,70 @@ package config
 import (
 	"encoding/json"
 	"flag"
-	"log"
-	"os"
-
 	"github.com/caarlos0/env"
+	"log"
+	"net"
+	"os"
 )
 
 const (
-	defaultAddr    = "localhost:8080"
-	defaultBaseURL = "http://localhost:8080"
+	defaultAddr     = "localhost:8080"
+	defaultBaseURL  = "http://localhost:8080"
+	defaultGRPCPort = "3200"
 )
+
+// CustomIPNet кастомный net.IPNet для интрейфесов из flag, env,json
+type CustomIPNet net.IPNet
+
+// UnmarshalText  для получения net.IPNet из строки из ENV
+func (t *CustomIPNet) UnmarshalText(data []byte) error {
+	_, ipNet, err := net.ParseCIDR(string(data))
+	if err != nil {
+		log.Println("error parsing trusted subnet from ENV", err)
+		return err
+	}
+	*t = CustomIPNet(*ipNet)
+	return err
+}
+
+// UnmarshalJSON для получения net.IPNet из строки из JSON конфига
+func (t *CustomIPNet) UnmarshalJSON(data []byte) error {
+	_, ipNet, err := net.ParseCIDR(string(data))
+	if err != nil {
+		log.Println("error parsing trusted subnet from JSON", err)
+		return err
+	}
+	*t = CustomIPNet(*ipNet)
+	return err
+}
+
+// String для имплементации flag.Value interface - net.IPNet из строки из флага
+func (t *CustomIPNet) String() string {
+	return t.Mask.String()
+}
+
+// Set для имплементации flag.Value interface - net.IPNet из строки из флага
+func (t *CustomIPNet) Set(data string) error {
+	_, ipNet, err := net.ParseCIDR(data)
+	if err != nil {
+		log.Println("error parsing trusted subnet from flag", err)
+		return err
+	}
+	*t = CustomIPNet(*ipNet)
+	return err
+}
 
 // Config содержит строки конфигурации приложения. Значения собираются из ENV.
 type Config struct {
-	Addr        string `env:"SERVER_ADDRESS" json:"server_address"`
-	BaseURL     string `env:"BASE_URL" json:"base_url"`
-	FileStorage string `env:"FILE_STORAGE_PATH" json:"file_storage_path"`
-	Database    string `env:"DATABASE_DSN" json:"database_dsn"`
-	Key         string `env:"COOKIES_KEY" envDefault:"V3ry$trongK3y"`
-	HTTPS       bool   `env:"ENABLE_HTTPS" json:"enable_https"`
-	Config      string `env:"CONFIG"`
+	Addr          string      `env:"SERVER_ADDRESS" json:"server_address"`
+	BaseURL       string      `env:"BASE_URL" json:"base_url"`
+	FileStorage   string      `env:"FILE_STORAGE_PATH" json:"file_storage_path"`
+	Database      string      `env:"DATABASE_DSN" json:"database_dsn"`
+	Key           string      `env:"COOKIES_KEY" envDefault:"V3ry$trongK3y"`
+	HTTPS         bool        `env:"ENABLE_HTTPS" json:"enable_https"`
+	Config        string      `env:"CONFIG"`
+	TrustedSubnet CustomIPNet `env:"TRUSTED_SUBNET" json:"trusted_subnet"`
+	GRPCPort      string      `env:"GRPC_PORT" json:"grpc_port"`
 }
 
 var cfg Config
@@ -35,8 +79,10 @@ func init() {
 	flag.StringVar(&cfg.Database, "d", cfg.Database, "DSN for PGSQL")
 	flag.StringVar(&cfg.Key, "k", cfg.Key, "Key string for sign cookies")
 	flag.BoolVar(&cfg.HTTPS, "s", cfg.HTTPS, "Enable HTTPS")
+	flag.Var(&cfg.TrustedSubnet, "t", "Trusted subnet in CIDR")
 	flag.StringVar(&cfg.Config, "c", cfg.Config, "Config file destination")
 	flag.StringVar(&cfg.Config, "config", cfg.Config, "Config file destination")
+	flag.StringVar(&cfg.GRPCPort, "g", cfg.GRPCPort, "grpc server port")
 }
 
 // New возвращает конфиг. Приоритет file->env->flag
@@ -58,6 +104,9 @@ func New() (Config, error) {
 	}
 	if len(cfg.BaseURL) == 0 {
 		cfg.BaseURL = defaultBaseURL
+	}
+	if len(cfg.GRPCPort) == 0 {
+		cfg.GRPCPort = defaultGRPCPort
 	}
 	return cfg, nil
 }

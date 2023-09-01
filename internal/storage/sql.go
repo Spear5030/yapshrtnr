@@ -213,3 +213,33 @@ func (pgStorage *pgStorage) SetBatchURLs(ctx context.Context, urls []domain.URL)
 	}
 	return tx.Commit()
 }
+
+// GetUsersCount возвращает количество пользователей
+func (pgStorage *pgStorage) GetUsersCount(ctx context.Context) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	var count int
+
+	sql := `SELECT COUNT(userid) from urls;`
+	err := pgStorage.db.QueryRowContext(ctx, sql).Scan(&count)
+	if err != nil {
+		return -1, err
+	}
+	return count, nil
+}
+
+// GetUrlsCount возвращает количество ссылок
+func (pgStorage *pgStorage) GetUrlsCount(ctx context.Context) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	var count int
+
+	sql := `SELECT COUNT(long) from urls;`
+	err := pgStorage.db.QueryRowContext(ctx, sql).Scan(&count)
+	if err != nil {
+		return -1, err
+	}
+	return count, nil
+}

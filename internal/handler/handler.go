@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 
@@ -24,10 +25,11 @@ import (
 
 // Handler основная структура обработчика. Storage - интерфейс.
 type Handler struct {
-	Storage   storage
-	logger    *zap.Logger
-	BaseURL   string
-	SecretKey string
+	Storage       storage
+	logger        *zap.Logger
+	BaseURL       string
+	SecretKey     string
+	trustedSubnet net.IPNet
 }
 
 type storage interface {
@@ -36,6 +38,8 @@ type storage interface {
 	GetURLsByUser(ctx context.Context, user string) (urls map[string]string)
 	SetBatchURLs(ctx context.Context, urls []domain.URL) error
 	DeleteURLs(ctx context.Context, user string, shorts []string)
+	GetUsersCount(ctx context.Context) (int, error)
+	GetUrlsCount(ctx context.Context) (int, error)
 }
 
 type link struct {
@@ -67,13 +71,19 @@ type batchResult struct {
 	CorrelationID string `json:"correlation_id"`
 }
 
+type statsResult struct {
+	Urls  int `json:"urls"`
+	Users int `json:"users"`
+}
+
 // New возвращает Handler
-func New(logger *zap.Logger, storage storage, baseURL string, key string) *Handler {
+func New(logger *zap.Logger, storage storage, baseURL string, key string, trustedSubnet net.IPNet) *Handler {
 	return &Handler{
-		logger:    logger,
-		Storage:   storage,
-		BaseURL:   baseURL,
-		SecretKey: key,
+		logger:        logger,
+		Storage:       storage,
+		BaseURL:       baseURL,
+		SecretKey:     key,
+		trustedSubnet: trustedSubnet,
 	}
 }
 
@@ -114,7 +124,11 @@ func (h *Handler) PostURL(w http.ResponseWriter, r *http.Request) {
 	}
 	h.logger.Info("SetURL", zap.String("long", string(b)), zap.String("short", short), zap.Int("status", status))
 	w.WriteHeader(status)
-	w.Write([]byte(res))
+	_, err = w.Write([]byte(res))
+	if err != nil {
+		h.logger.Error("PostURL write error", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
 }
 
 // GetURL получает сокращенную ссылку из URL. Возвращает полную ссылку и Redirect
@@ -269,6 +283,53 @@ func (h *Handler) GetURLsByUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	w.Write(resJSON)
+}
+
+// GetInternalStats возвращает JSON со статистикой, если запрос идет из доверенных подсетей
+func (h *Handler) GetInternalStats(w http.ResponseWriter, r *http.Request) {
+	ip := r.Header.Get("X-Real-IP")
+	netIP := net.ParseIP(ip)
+	if netIP == nil {
+		h.logger.Info("no x-real-ip header")
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	if !h.trustedSubnet.Contains(netIP) {
+		h.logger.Info("GetInternalStats from non trusted subnet", zap.String("IP", netIP.String()))
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	stats := &statsResult{}
+	var err error
+
+	stats.Users, err = h.Storage.GetUsersCount(r.Context())
+	if err != nil {
+		h.logger.Error("GetUsersCount error", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	stats.Urls, err = h.Storage.GetUrlsCount(r.Context())
+	if err != nil {
+		h.logger.Error("GetUrlsCount error", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	statsJSON, err := json.Marshal(stats)
+	if err != nil {
+		h.logger.Error("GetInternalStats marshal error", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	_, err = w.Write(statsJSON)
+	if err != nil {
+		h.logger.Error("GetInternalStats write error", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
 }
 
 // DecompressGZRequest middleware для работы с gzip

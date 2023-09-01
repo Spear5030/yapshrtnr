@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+package yapshrtnr;
+
+option go_package = "/internal/pb";
+
+message URL {
+  string short = 1;
+  string long = 2;
+}
+
+message Short {
+  string short = 1;
+}
+
+message Long {
+  string long = 1;
+}
+
+message StatsResponse{
+  sint32 urls = 1;
+  sint32 users = 2;
+}
+
+message GetResponse {
+  string long = 1;
+  bool deleted = 2;
+}
+
+message RequestBatchURLs {
+  message input {
+    string long = 1;
+    string correlation_id = 2;
+  }
+  repeated input inputs = 1;
+}
+
+message ResponseBatchURLs {
+  message output {
+    string short = 1;
+    string correlation_id = 2;
+  }
+  repeated output outputs = 1;
+}
+
+message RequestDeleteBatch {
+  repeated Short shorts = 1;
+}
+
+message ResponseGetURLsByUser {
+  repeated URL urls =1;
+}
+
+service Shortener {
+  rpc PingDB(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc GetURL(Short) returns (GetResponse);
+  rpc PostURL(Long) returns(Short); // todo AlreadyExists Code
+  rpc GetInternalStats(google.protobuf.Empty) returns (StatsResponse); // todo subnet check
+  rpc PostBatchURLs(RequestBatchURLs) returns(ResponseBatchURLs);
+  rpc DeleteBatchByUser(RequestDeleteBatch) returns (google.protobuf.Empty);
+  rpc GetURLsByUser(google.protobuf.Empty) returns (ResponseGetURLsByUser); // todo NotFound Code
+}
